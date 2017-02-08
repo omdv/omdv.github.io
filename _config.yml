@@ -10,7 +10,7 @@ title: Oleg Medvedev
 description: Data science and data visualization.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://omdv.github.io" # the base hostname & protocol for your site
-twitter_username: omdv
+twitter_username:
 github_username:  omdv
 
 # Build settings
