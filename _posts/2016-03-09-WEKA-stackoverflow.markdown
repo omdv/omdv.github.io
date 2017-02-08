@@ -1,8 +1,7 @@
 ---
 layout: post
 title:  "WEKA classification"
-date:   2016-03-09 19:40:16 -0700
-categories: [datascience]
+categories: [random forest, WEKA]
 ---
 There was a question posted on [stackoverflow][stack] on classification issues in WEKA. The datasets are available via [web-archive][datasets]. Since *.csv files were not available I downloaded *.ARFF and converted them to *.csv manually, as the format appeared to be quite simple. This is the list of features available to be placed in first row to construct the dataframe with column names.
 

@@ -6,12 +6,14 @@
 # 'jekyll serve'. If you change this file, please restart the server process.
 
 # Site settings
-title: omdv
+title: Oleg Medvedev
 description: Data science and data visualization.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://omdv.github.io" # the base hostname & protocol for your site
 twitter_username:
-github_username:  omdv
+github_username: omdv
+linkedin_username: omedvedev
+email: omdv@gmail.com
 
 # Build settings
 markdown: kramdown
