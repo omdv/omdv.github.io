@@ -7,13 +7,13 @@
 
 # Site settings
 title: Oleg Medvedev
-description: Data science and data visualization.
+description: Data science, data visualization, web design, etc.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://omdv.github.io" # the base hostname & protocol for your site
 twitter_username:
 github_username: omdv
 linkedin_username: omedvedev
-email: omdv@gmail.com
+email:
 
 # Build settings
 markdown: kramdown
