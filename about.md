@@ -4,4 +4,4 @@ title: About
 permalink: /about/
 ---
 
-Data science enthusiast.
+There is nothing here.
