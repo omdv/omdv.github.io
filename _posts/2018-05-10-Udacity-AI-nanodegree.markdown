@@ -1,10 +1,9 @@
 ---
 title: Udacity Artificial Intelligence Nanodegree
 layout: post
-page.categories: [udacity, notes, artificial intelligence]
+tags: [udacity, machine learning, lecture notes, artificial intelligence]
+description: Notes for the 6 months version of Udacity AI Nanodegree taken in Dec, 2017 - July, 2018.
 ---
-
-The 6-months version, taken in Dec, 2017 - July, 2018.
 
 ## Term 1 - Search and Planning
 

@@ -1,7 +1,8 @@
 ---
 layout: post
 title:  "WEKA classification"
-page.categories: [random forest, WEKA]
+tags: [machine learning, random forest, WEKA]
+description: Post complimenting the ML-related answer on Stackoverflow in 2016.
 ---
 There was a question posted on [stackoverflow][stack] on classification issues in WEKA. The datasets are available via [web-archive][datasets]. Since *.csv files were not available I downloaded *.ARFF and converted them to *.csv manually, as the format appeared to be quite simple. This is the list of features available to be placed in first row to construct the dataframe with column names.
 
@@ -166,13 +167,13 @@ if __name__ == '__main__':
 
 Script provides three plots. First is the feature importance. Second is the learning curve which looks somewhat weird as both training and cross-validation scores are perfect. After delving deeper into dataset it looks like the original website hosting the dataset mentions that it had too many repeat values, which could explain these scores.
 
-![Feature importance]({{ site.github.url }}/assets/weka_features.png)
+![Feature importance]({{ site.url }}/assets/weka_features.png)
 
-![Learning curves]({{ site.github.url }}/assets/weka_learning_curves.png)
+![Learning curves]({{ site.url }}/assets/weka_learning_curves.png)
 
 Finally the confusion matrix for the test dataset. The precision drops to 65% for "normal" case and recall is high. Perhaps adjusting the threshold values for classifier will help.
 
-![Confusion matrix]({{ site.github.url }}/assets/weka_cmatrix.png)
+![Confusion matrix]({{ site.url }}/assets/weka_cmatrix.png)
 
 The final fit report is below as well:
 {% highlight python %}
