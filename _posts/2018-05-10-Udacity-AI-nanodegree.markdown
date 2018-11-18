@@ -7,16 +7,12 @@ description: Notes for the 6 months version of Udacity AI Nanodegree taken in De
 
 ## Term 1 - Search and Planning
 
-### Lesson 1: Intro and Logistics
-Slack channel and forum. Waffle.io for project management/bug tracking. Use gh-pages branch for sharing on github-pages.
-
-### Lesson 2: Setting up environment
+### Lesson 2: Refresher and setting up
 Math refresher (optional):
 1. [Udacity linear algebra refresher](https://classroom.udacity.com/courses/ud953)
 2. [Udacity Intro to Algos](https://www.udacity.com/course/intro-to-algorithms--cs215)
 
-### Lesson 3: Career profile
-
+***
 ### Lesson 4: Intro to AI
 AI is a moving target, e.g. chess, path finding, chatting agents, so on.
 
@@ -26,10 +22,10 @@ When choosing the best representation for the game model choose the one moving t
 
 Mini-max search and adversarial search - maximizing your chances during your turn and opponent minimizing chances during their turn. Definitions of agent, environment, states and goal state. Agent has perception to interact with environment, use cognition to take action to change environment. Intelligent agent is the one that takes actions to maximize it's utility given a desired goal, i.e. rational behavior, however agent cannot behave optimally always, so we define "bounded optimality" to quantify the intelligence.
 
-
 #### Links:
 1. [AIMA book](https://www.amazon.com/Artificial-Intelligence-Modern-Approach-3rd/dp/0136042597)
 
+***
 ### Lesson 5: Applying AI to Sudoku
 Encoding the problem, coordinates, peers based on the rules we want to implement later
 Techniques:
@@ -39,13 +35,7 @@ Techniques:
 #### Links:
 1. [Blog post by Peter Norvig](http://norvig.com/sudoku.html)
 
-
-### Lesson 6: Environment setup
-Ended up using pyenv to manage python installations. Pyenv virtualenv wrapper allows to activate conda environments.
-
-## Project: Sudoku
-Constraint propagation for heuristics. Search for complex cases (depth first search)
-
+***
 ### Lesson 8: Playing Isolation game
 * Book of opening moves. How to choose best opening automatically - minmax algorithm.
 * Min and max levels - our bot is trying to maximize his chances and opponent always plays perfectly to minimize it.
@@ -55,6 +45,7 @@ Constraint propagation for heuristics. Search for complex cases (depth first sea
 * Start from the bottom of the tree. For each max node pick the maximum value along the child nodes, and vice-versa.
 * Quiescent search - sensitivity analysis as to how results change based on how many level limitations we have. Choose the one after which results are stable.
 
+***
 ### Lesson 9: Advanced Game Playing
 * Iterative deepening - include next level consideration only if time allows
 * Depth of possible search with ID may vary with branching factors and be different in different phases of the game
@@ -66,6 +57,7 @@ Constraint propagation for heuristics. Search for complex cases (depth first sea
 * For probabilistic games just add a probability for each branch and do minimax with probability accounted for
 
 
+***
 ### Lesson 11: Search
 * Definition of a problem (states, actions, goals, costs, etc)
 * Frontier, explored region and unexplored region
@@ -81,7 +73,8 @@ best estimated total path cost first
 * For Search to work domain should have some characteristics: fully observable, known (know available actions), discrete (a limited set of actions to choose from), deterministic (know the result of taking an action), static (only our actions change the world)
 * To implement we define node with state, action, cost and parent, frontier is defined as set, should be able to remove members, add new and do a membership test, priority queue.
 
-### Lesson 12 (Simulated Annealing)
+***
+### Lesson 12: Simulated Annealing
 * Techniques to solve very complex problems by trying simple heuristics first
 * Example of travelling salesman of n-queens problems - initiate randomly, move pieces with largest number of conflicts and iterate
 * The issue is the local maxima/minima, solution is to do a random restart
@@ -91,19 +84,22 @@ best estimated total path cost first
 * Local beam search - variation of random restart but with N particles, which further exchange information between them by being compared. We choose only the best.
 * Generic algorithms - crossovers, mutation, etc
 
-### Lesson 13 (Constraint Satisfaction)
+***
+### Lesson 13: Constraint Satisfaction
 * Constraint optimization techniques - backtracking optimization and forward checking.
 * Some heuristics may be applied to backtracking, such as least constraining value, minimum remaining values
 * Structured CSPs - tricks to divide problem into smaller pieces or acyclic graphs to reduce complexity
 
-### Lesson 14 (Login and Reasoning)
+***
+### Lesson 14: Login and Reasoning
 * Peter Norvig's vision of future directions for planning algorithms: learning from examples, transfer learning, interactive planning (human + machine), explaining things in terms human can understand
 * Propositional logic to define models between events/variables. Truth tables.
 * Limitations of P.L. - can handle only binary values, can't handle uncertainty, can't cover physical world objects, no shortcuts to cover many things happening at the same time
 * First order logic extent P.L. as it introduces relations, objects and functions which can describe the world, while P.L. had only facts
 * FOL models contain constants, where multiple constants can refer to the same object and functions, which map objects to objects
 
-### Lesson 15 (Planning)
+***
+### Lesson 15: Planning
 * Planning requires some interaction with the environment during execution phase
 * In stochastic worlds it is helpful to operate in the space of belief states
 * Conformant plans require no information about the world
@@ -118,11 +114,12 @@ best estimated total path cost first
 * The classical planning representation allows to do automatic heuristics search by relaxing some of conditions automatically and search through it
 * Situation Calculus - can't apply Classical Planning to all cargo. S.C. allows it with First Order Logic
 
-### Lesson 16 (Probabilities & Bayes Networks)
-* Bayes networks are the building blocks of more advanced AI techniques, like particle filters, Kalman, etc
-* Conditional probabilities refresher
+***
+### Lesson 16: Probabilities & Bayes Networks
+Bayes networks are the building blocks of more advanced AI techniques, like particle filters, Kalman, etc. Conditional probabilities refresher.
 
-### Lesson 17 Bayes Nets
+***
+### Lesson 17: Bayes Nets
 * Bayes nets statement:
  * We know the prior about A - P(A), but A is not observable
  * B is observable and we know P(B|A) and P(B| notA)
@@ -137,7 +134,8 @@ best estimated total path cost first
 * Bayes nets use the graph representation which allows to represent complex networks with small number of joint probability distributions
 * D-separation for independence, explain away may bring dependence into a pair of previously independent variables
 
-### Lesson 18 Inference in Bayes Nets (Exact inference)
+***
+### Lesson 18: Inference in Bayes Nets (Exact inference)
 * Evidence, query and hidden variables
 * We are looking for probability of one or more query variables given some values for one or more evidence variables - P(Q1, Q2 | E1=e1, E2=e2)
 * Enumeration technique, but can be slow for large bayes nets
@@ -145,15 +143,14 @@ best estimated total path cost first
 * Bayes nets are the most compact and easiest to work if they are written in causal direction
 * Variable elimination technique - step by step factor multiplication
 
-## Week 11 - Approximate Inference
-* Use sampling to get joint probability distributions. This also let us build the conditional probability tables
-* Gibbs sampling using MCMC
+#### Approximate Inference
+Use sampling to get joint probability distributions. This also let us build the conditional probability tables. Gibbs sampling using MCMC
 
-### Lesson 19 Hidden Markov Models
+***
+### Lesson 19: Hidden Markov Models
 * Time series pattern recognition
 * A lot of human activities fall in domain of pattern recognition through time series
 * How to match two signals - use delta frequency for freq matching and dynamic time warping for matching across time
-* [Dynamic time warping myths](http://wearables.cc.gatech.edu/paper_of_week/DTW_myths.pdf)
 * HMM training - break your sequence into a number of states, calculate prob distribution, calculate transition probabilities, update boundaries and so forth until convergence
 * Baum Welch - variation of the expectation maximization process
 * Any distribution may be represented by a mixture og Gaussians
@@ -161,10 +158,106 @@ best estimated total path cost first
 * Different specific tricks: Context grammar and statistical grammar combined reduce the error rate by 8
 * HMMs are generally bad for generating data, while good at classifying it - the problem is that the output has no continuity.
 
+#### Links:
+1. [Dynamic time warping myths](http://wearables.cc.gatech.edu/paper_of_week/DTW_myths.pdf)
 
+***
 ## Term 2 - Deep Learning
-[Stanford course on CNN](http://cs231n.stanford.edu)
 
+### Generic Notes
+Taken during watching the lectures, also I knew most of it from before, so it is somewhat chaotic.
+
+#### Week 1: Deep NN
+* Usual NN explanations - AND, OR, NAND, XOR, etc
+* Using graphical representation to explain the separation of classes
+* Moving line towards misclassified points with learning rate
+* Error functions, gradient descent, error function needs to be continuous for GD
+* Sigmoid is needed vs step function to give a continuous change, good explanation of activation functions overall
+* Softmax for multiclass problems - normalized exponents of linear outputs
+* One-hot encoding
+* Maximum likelihood (log-likelihood is required to get rid of products of probabilities)
+* Cross-entropy is the negative sum of log of probabilities. Good model - low cross-entropy. Misclassified points have higher negative log of probability, because log of probability of 1 is zero. Cross-entropy is the sum of all outcome probabilities times the outcome for all samples. Essentially we are adding probabilities only of the events that have occured by multiplying log of probability by the label for the event.
+* Logistic regression - explanation is based on error function described earlier, which is a mean of log of probabilities times label
+* Gradient descent calculations - analytical derivations. For logistic regression the gradient turns out to be just the scalar times coordinates of the point, where scalar is just the difference between the label and the prediction. Updating weights and bias becomes as simple as just multiplying learning rate (normalized by number of points) by coordinates. GD algo is similar to previously discussed Perceptron algo.
+* Perceptron just draws a line or hyperplane given weights for each input and bias and determines if given point is positive or negative (activation function -> sigmoid vs step function)
+* Neural networks (or MLP) - combining first level models to get more complex models, using weights for previous models to achieve the right combination, applying activation functions (sigmoid) to get continuous probability and also cut-off probability at one.
+* NN architecture - nodes equal to problem dimension, output equal to a number of classes needed to be classified.
+* Feedforward - forward calculation to get the error function for the whole network
+* Backprop - feedforward with gradient descent. Calculating derivatives at each layer, use chain rule for derivatives.
+* Bias vs variance - it is better to stay on overcomplicated side and implement some techniques to prevent overfittting
+* Early stopping - stop when test error starts to increase
+* Regularization - we don't want too certain models, because their activation function has too steep curve in the vicinity of zero and as such are difficult to be handled by gradient descent. Large coefficients cause the overfitting. Regularization punishes big coefficients. L1 or L2 regularization. L1 regularization is better for feature selection, L2 is better for training models.
+* Dropout - randomly turning off some nodes during the training to let other nodes train and train the whole network more uniformly.
+* Vanishing gradient with sigmoid function - either tanh or relu.
+* Random restarts to solve the local minimum problem.
+* Momentum to skip small humps to not get stuck in local minima - work really well in practice.
+
+#### Week 2: CNNs
+* Google's wavenet - reading text
+* MNIST MLP notebook best practices:
+- one-hot encode and flatten
+- relu, rmsprop
+- use ModelCheckpoint callback and validation split when training
+* CNNs are similar to MLPs in activation functions, however use different hidden layers to address the following two issues of MLPs:
+- MLPs use only fully connected layers, so the number of parameters is too high
+- We throw away the 2D info contained in the image when we flatten it, i.e. the underlying spatial info of the image is lost
+* CNNs use the layers, which are sparsely connected and informed about 2D structure
+* Locally connected layers vs densely connected layers
+* Convolutional layers:
+- the node value is a sum of weights times the value of pixel/input, apply ReLu
+- weights can be represented in a grid, with the size matching the size of the convolutional windows, then this grid is called a filter
+- filter resembles the pattern it is designed to detect, so it is useful to visualize the filter to understand what type of pattern it will detect
+- convolutional layer may have multiple collections of filters to look after different patterns
+- with this said in CNNs we do not pre-specify filters, CNN will learn the best filters based on the images it needs to detect
+* Collection of filters is called either a feature map or activation map
+* For color images the filter becomes the stack of three 2d matrices, one for each color in RGB, the multiplication of input by filter weights is done for each color correspondingly
+* Hyperparameters of convolutional layers:
+- size of filters
+- number of filters
+- stride of filters - step by which we move filter across the image. Stride of one will create roughly the same size layer as the image, stride of two will create approximately the half, approximately because of the edge. You could either ignore the size mismatch and you may loose some nodes, otherwise you can pad image with zeros.
+* Number of parameters in conv layer is: n_filters * size_filter^2 * depth_input + n_filters (for bias)
+* Depth of the output of layer is equal to n_filters
+* Shape depends on padding and stride
+* Pooling layers are the second type of layer for CNN, required to reduce dimensionality or complexity of conv layer output. There are many different types. Max pooling will use the window of some size and select max value in the specific window. Global averaging PL will just average each layer/filter of conv.layer and return just a vector. All pooling layers will still have the number of outputs (be it matrix or single value) equal to the initial number of layers/filters.
+* Pooling usually has either max or average, 1D, 2D, 3D and global vs window-based
+
+
+#### Week 4: End of CNN and TF intro
+* CNNs require images of the same size. It is typical to transform all images to square with dims of power of two
+* CNN progression may be seen as a start with 2D image with depth (1 for grayscale, 3 for RGB). CNNs then progressively increase the depths. Convolutional layers increase the depth due to the addition of filters and may also decrease spatial dimensions, pooling layers keep the depth the same and decrease dimensions significantly depending on the type of pooling.
+* Some typical values:
+- filters/kernels size are 2x2 to 5x5
+- stride is usually 1 (default)
+- padding is better "same" (not default)
+- combined above results in the layer of the same size, but increased depth
+- conv layers connected in series typically have increasing number of filters
+* The intuition is that as you combine conv layers of increasing depth with max pooling you convert spatial information into a depth, where each layer in a final pooling layer may be seen as answering questions about the image, like whether there are wheels, or legs or eyes. We don't prespecify these questions as we don't specify the type of filters, instead the model creates the "right questions" itself.
+* The final pooling layer may be flattened, because all spatial info is already preprocessed and lost at this point. Then the dense layer with relu and final layer with softmax may be used.
+* Image augmentation - generate synthethic test data by rotating, flipping and translating your training images. Keras has corresponding functions, the fit method is slighly different as well.
+* ImageNet competitions milestones:
+- 2012: AlexNet introduced dropouts and ReLus
+- 2014: VGG pionered the use of smaller filters. They used 16 or 19 layers total with 3x3 filters grouped in three blocks of conv layers separated by pooling layers
+- 2015: ResNet has 152 layers. Usually this is a problem because of vanishing gradient problem. ResNet resolved it by implementing a shortcuts between layers to let the gradient backpropagate.
+- Most of the winning architectures and trained nets are accessible through Keras
+* Techniques to understand how CNN works:
+- showing the output of each filter real-time
+- constructing images which maximize the activation of a layer - famous illustrations. Then it may become apparent what a layer is trying to distinguish, say a building or eyes or legs, etc.
+- Deeper layers may provide a more refined representation, while first layers may be looking at just simple patterns
+* Transfer learning is a technique to use pre-trained CNNs for your specific classification tasks. CNNs are trained to detect patterns, so if you remove only the last (few) layers which are responsible for detection of specific objects and add dense layer to train to your new dataset it is possible to re-train network. There are different strategies on how to do it, depending on the size of your dataset and how much the new task differs from the one used to train the original network.
+
+#### Links:
+1. [Stanford course on CNN](http://cs231n.stanford.edu)
+2. [Activation functions](http://cs231n.github.io/neural-networks-1/#actfun)
+3. [Understanding CNNs](http://cs231n.github.io/understanding-cnn/)
+4. [Deep Vis Toolbox](https://github.com/yosinski/deep-visualization-toolbox)
+5. [Stanford DL wiki](http://deeplearning.stanford.edu/wiki/index.php/UFLDL_Tutorial)
+6. [More on CNN filters intuition](http://setosa.io/ev/image-kernels/)
+7. [Keras callbacks](https://keras.io/callbacks/#modelcheckpoint)
+8. [Karpathy's on deep RL](http://karpathy.github.io/2016/05/31/rl/)
+9. [Deep Learning as a black magic](https://www.technologyreview.com/s/604087/the-dark-secret-at-the-heart-of-ai/)
+
+
+***
 ### Lesson 8: Tensorflow
 
 #### Hello World
@@ -399,6 +492,7 @@ bias = tf.Variable(tf.truncated_normal([3]), name='bias_0')
 2. [Tensorflow tutorials and examples with latest API](https://github.com/aymericdamien/TensorFlow-Examples)
 
 
+***
 ### Lesson 9: Autoencoders
 Autoencoders are used to compress data, as well as image denoising. Compression and decompression methods are learned from the train data and not engineered by human. Autoencoders are usually worse at compression than traditional methods, like jpeg, mp4, mpeg and they also do not generalize well to previously unseen data. However they found use in image denoising and dimensionality reduction.
 
@@ -446,95 +540,8 @@ Note that for the upscaling it is possible to use transposed convolutional layer
 1. [Deep Learning Lab public repo](https://github.com/udacity/deep-learning)
 2. [Upsampling deconvolutional layers](https://distill.pub/2016/deconv-checkerboard/)
 
-## Week 1: Deep NN
-* Usual NN explanations - AND, OR, NAND, XOR, etc
-* Using graphical representation to explain the separation of classes
-* Moving line towards misclassified points with learning rate
-* Error functions, gradient descent, error function needs to be continuous for GD
-* Sigmoid is needed vs step function to give a continuous change, good explanation of activation functions overall
-* Softmax for multiclass problems - normalized exponents of linear outputs
-* One-hot encoding
-* Maximum likelihood (log-likelihood is required to get rid of products of probabilities)
-* Cross-entropy is the negative sum of log of probabilities. Good model - low cross-entropy. Misclassified points have higher negative log of probability, because log of probability of 1 is zero. Cross-entropy is the sum of all outcome probabilities times the outcome for all samples. Essentially we are adding probabilities only of the events that have occured by multiplying log of probability by the label for the event.
-* Logistic regression - explanation is based on error function described earlier, which is a mean of log of probabilities times label
-* Gradient descent calculations - analytical derivations. For logistic regression the gradient turns out to be just the scalar times coordinates of the point, where scalar is just the difference between the label and the prediction. Updating weights and bias becomes as simple as just multiplying learning rate (normalized by number of points) by coordinates. GD algo is similar to previously discussed Perceptron algo.
-* Perceptron just draws a line or hyperplane given weights for each input and bias and determines if given point is positive or negative (activation function -> sigmoid vs step function)
-* Neural networks (or MLP) - combining first level models to get more complex models, using weights for previous models to achieve the right combination, applying activation functions (sigmoid) to get continuous probability and also cut-off probability at one.
-* NN architecture - nodes equal to problem dimension, output equal to a number of classes needed to be classified.
-* Feedforward - forward calculation to get the error function for the whole network
-* Backprop - feedforward with gradient descent. Calculating derivatives at each layer, use chain rule for derivatives.
-* Bias vs variance - it is better to stay on overcomplicated side and implement some techniques to prevent overfittting
-* Early stopping - stop when test error starts to increase
-* Regularization - we don't want too certain models, because their activation function has too steep curve in the vicinity of zero and as such are difficult to be handled by gradient descent. Large coefficients cause the overfitting. Regularization punishes big coefficients. L1 or L2 regularization. L1 regularization is better for feature selection, L2 is better for training models.
-* Dropout - randomly turning off some nodes during the training to let other nodes train and train the whole network more uniformly.
-* Vanishing gradient with sigmoid function - either tanh or relu.
-* Random restarts to solve the local minimum problem.
-* Momentum to skip small humps to not get stuck in local minima - work really well in practice.
 
-## Week 2: CNNs
-* Google's wavenet - reading text
-* Good link about activation functions [link](http://cs231n.github.io/neural-networks-1/#actfun)
-* Karpathy's [link](http://karpathy.github.io/2016/05/31/rl/) about deep RL
-* MNIST MLP notebook best practices:
-- one-hot encode and flatten
-- relu, rmsprop
-- use ModelCheckpoint callback and validation split when training
-* [List](https://keras.io/callbacks/#modelcheckpoint) of Keras callbacks
-* Good [article](https://www.technologyreview.com/s/604087/the-dark-secret-at-the-heart-of-ai/) on the fact that noone understands how DL works and that EU wants to enforce AI practitioners to explain the logic of AI systems to its users
-* CNNs are similar to MLPs in activation functions, however use different hidden layers to address the following two issues of MLPs:
-- MLPs use only fully connected layers, so the number of parameters is too high
-- We throw away the 2D info contained in the image when we flatten it, i.e. the underlying spatial info of the image is lost
-* CNNs use the layers, which are sparsely connected and informed about 2D structure
-* Locally connected layers vs densely connected layers
-* Convolutional layers:
-- the node value is a sum of weights times the value of pixel/input, apply ReLu
-- weights can be represented in a grid, with the size matching the size of the convolutional windows, then this grid is called a filter
-- filter resembles the pattern it is designed to detect, so it is useful to visualize the filter to understand what type of pattern it will detect
-- convolutional layer may have multiple collections of filters to look after different patterns
-- with this said in CNNs we do not pre-specify filters, CNN will learn the best filters based on the images it needs to detect
-- more about [filters intuition](http://setosa.io/ev/image-kernels/)
-* Collection of filters is called either a feature map or activation map
-* Stanford course on CNN - [CS231n](http://cs231n.stanford.edu)
-* For color images the filter becomes the stack of three 2d matrices, one for each color in RGB, the multiplication of input by filter weights is done for each color correspondingly
-* Hyperparameters of convolutional layers:
-- size of filters
-- number of filters
-- stride of filters - step by which we move filter across the image. Stride of one will create roughly the same size layer as the image, stride of two will create approximately the half, approximately because of the edge. You could either ignore the size mismatch and you may loose some nodes, otherwise you can pad image with zeros.
-* [Stanford wiki](http://deeplearning.stanford.edu/wiki/index.php/UFLDL_Tutorial) on deep learning
-* Number of parameters in conv layer is: n_filters * size_filter^2 * depth_input + n_filters (for bias)
-* Depth of the output of layer is equal to n_filters
-* Shape depends on padding and stride
-* Pooling layers are the second type of layer for CNN, required to reduce dimensionality or complexity of conv layer output. There are many different types. Max pooling will use the window of some size and select max value in the specific window. Global averaging PL will just average each layer/filter of conv.layer and return just a vector. All pooling layers will still have the number of outputs (be it matrix or single value) equal to the initial number of layers/filters.
-* Pooling usually has either max or average, 1D, 2D, 3D and global vs window-based
-
-
-## Week 4: End of CNN and TF intro
-* CNNs require images of the same size. It is typical to transform all images to square with dims of power of two
-* CNN progression may be seen as a start with 2D image with depth (1 for grayscale, 3 for RGB). CNNs then progressively increase the depths. Convolutional layers increase the depth due to the addition of filters and may also decrease spatial dimensions, pooling layers keep the depth the same and decrease dimensions significantly depending on the type of pooling.
-* Some typical values:
-- filters/kernels size are 2x2 to 5x5
-- stride is usually 1 (default)
-- padding is better "same" (not default)
-- combined above results in the layer of the same size, but increased depth
-- conv layers connected in series typically have increasing number of filters
-* The intuition is that as you combine conv layers of increasing depth with max pooling you convert spatial information into a depth, where each layer in a final pooling layer may be seen as answering questions about the image, like whether there are wheels, or legs or eyes. We don't prespecify these questions as we don't specify the type of filters, instead the model creates the "right questions" itself.
-* The final pooling layer may be flattened, because all spatial info is already preprocessed and lost at this point. Then the dense layer with relu and final layer with softmax may be used.
-* Image augmentation - generate synthethic test data by rotating, flipping and translating your training images. Keras has corresponding functions, the fit method is slighly different as well.
-* ImageNet competitions milestones:
-- 2012: AlexNet introduced dropouts and ReLus
-- 2014: VGG pionered the use of smaller filters. They used 16 or 19 layers total with 3x3 filters grouped in three blocks of conv layers separated by pooling layers
-- 2015: ResNet has 152 layers. Usually this is a problem because of vanishing gradient problem. ResNet resolved it by implementing a shortcuts between layers to let the gradient backpropagate.
-- Most of the winning architectures and trained nets are accessible through Keras
-* Techniques to understand how CNN works:
-- showing the output of each filter real-time
-- constructing images which maximize the activation of a layer - famous illustrations. Then it may become apparent what a layer is trying to distinguish, say a building or eyes or legs, etc.
-- good link from [CS231n](http://cs231n.github.io/understanding-cnn/)
-- many good links in course notes
-- [Deep Vis Toolbox](https://github.com/yosinski/deep-visualization-toolbox)
-- Deeper layers may provide a more refined representation, while first layers may be looking at just simple patterns
-* Transfer learning is a technique to use pre-trained CNNs for your specific classification tasks. CNNs are trained to detect patterns, so if you remove only the last (few) layers which are responsible for detection of specific objects and add dense layer to train to your new dataset it is possible to re-train network. There are different strategies on how to do it, depending on the size of your dataset and how much the new task differs from the one used to train the original network.
-
-
+***
 ### Lesson 10: Recurrent Neural Networks
 
 #### Recursivity
@@ -572,7 +579,8 @@ Some high-level technical issues of RNNs:
 1. [Difficulties of training RNN](http://proceedings.mlr.press/v28/pascanu13.pdf)
 
 
-### Lesson 11 - Long Short Term Memory Networks
+***
+### Lesson 11: Long Short Term Memory Networks
 
 RNNs have a hard time storing a long-term memory due to a vanishing gradient problem. LSTM addresses this issue by protecting the long-term memory more. At each training example we fit in the long and short memory from prior example to obtain the new long/short memory and the prediction.
 
@@ -608,6 +616,7 @@ Other architectures which work well are **Gated Recurrent Unit** (GRU) [4]. It's
 4. [GRU overview](http://www.cs.toronto.edu/~guerzhoy/321/lec/W09/rnn_gated.pdf)
 
 
+***
 ### Lesson 12: Implementing RNNs and LSTMs
 RNNS have an intrinsic difficulty learning long-range interactions due to exploding/vanishing gradients. This happens because of multiple multiplications of the same number, so if the number is below 1 the product will eventually go to zero and if it is larger than 1 it will go to infinity.
 
@@ -618,6 +627,7 @@ RNNS have an intrinsic difficulty learning long-range interactions due to explod
 4. [Building RNN in TF from ground up](https://r2rt.com/recurrent-neural-networks-in-tensorflow-i.html)
 
 
+***
 ### Lesson 13: Hyperparameters
 
 No magic numbers that work everywhere. HP can be grouped in two categories. First is Optimizer hp, these will include learning rate, minibatch size, number of training iterations. Second is Model hp. These will include number of layers and some model-specific parameters related to architecture.
@@ -633,15 +643,16 @@ For the number of layers and hidden units - *"in practice it is often the case t
 For RNN architectures - there is no clear winner between LSTM and GRUs. Two layers are sufficient usually. Word embeddings sizes typically don't go beyond 500 or 1000.
 
 #### Links:
-[1] [Jay Alammar's blog on NN visualisation](http://jalammar.github.io/)
-[2] [Empirical Evaluation of Gated Recurrent Neural Networks on Sequence Modeling](https://arxiv.org/abs/1412.3555)
-[3] [An Empirical Exploration of Recurrent Network Architectures](http://proceedings.mlr.press/v37/jozefowicz15.pdf)
-[4] [Visualizing and Understanding Recurrent Networks ](https://arxiv.org/abs/1506.02078)
-[5] [https://colah.github.io/posts/2015-08-Understanding-LSTMs/](https://colah.github.io/posts/2015-08-Understanding-LSTMs/)
-[6] [Massive Exploration of Neural Machine Translation Architectures](https://arxiv.org/abs/1703.03906v2)
-[7] [How to Generate a Good Word Embedding?](https://arxiv.org/abs/1507.05523)
+1. [Jay Alammar's blog on NN visualisation](http://jalammar.github.io/)
+2. [Empirical Evaluation of Gated Recurrent Neural Networks on Sequence Modeling](https://arxiv.org/abs/1412.3555)
+3. [An Empirical Exploration of Recurrent Network Architectures](http://proceedings.mlr.press/v37/jozefowicz15.pdf)
+4. [Visualizing and Understanding Recurrent Networks ](https://arxiv.org/abs/1506.02078)
+5. [https://colah.github.io/posts/2015-08-Understanding-LSTMs/](https://colah.github.io/posts/2015-08-Understanding-LSTMs/)
+6. [Massive Exploration of Neural Machine Translation Architectures](https://arxiv.org/abs/1703.03906v2)
+7. [How to Generate a Good Word Embedding?](https://arxiv.org/abs/1507.05523)
 
 
+***
 ### Lesson 14: Sentiment Analysis
 Following [deep-learning repo](https://github.com/udacity/deep-learning/tree/master/sentiment-rnn). Predict sentiment based on IMDB movie reviews.
 
@@ -653,15 +664,17 @@ Steps:
 - Train the network
 
 
+***
 ### Lesson 15: Project
 Using LSTM for time-series prediction (Apple stock prices) and generation of text. There were 5 assignments, two were related to converting sequences into windowed X-y representations. Two were related to creating LSTM networks in Keras. One was related to cleaning up the text.
 
 #### Links:
-- [1] [Completed project repository](https://github.com/omdv/udacity-aind/tree/master/aind2-rnn)
-- [2] [Game of Thrones chapter generation](https://motherboard.vice.com/en_us/article/evvq3n/game-of-thrones-winds-of-winter-neural-network)
-- [3] [Code for the above example](https://github.com/zackthoutt/got-book-6/tree/master/generated-book-v1)
+1. [Completed project repository](https://github.com/omdv/udacity-aind/tree/master/aind2-rnn)
+2. [Game of Thrones chapter generation](https://motherboard.vice.com/en_us/article/evvq3n/game-of-thrones-winds-of-winter-neural-network)
+3. [Code for the above example](https://github.com/zackthoutt/got-book-6/tree/master/generated-book-v1)
 
 
+***
 ### Lesson 16: Generative Adversarial Networks
 Multiple applications in generating new images or doing image to image or text to image translations. Multiple examples in generating synthetic data for other ML or RL algorithms. Examples of using in scientific domain to compliment/replace physical measurements and simulations.
 
@@ -672,16 +685,18 @@ For a case of MNIST hand-written digits generation the GAN architecture may we c
 Exercise is following the [GAN example in Udacity DL lab](https://github.com/udacity/deep-learning/tree/master/gan_mnist).
 
 
+***
 ### Lesson 17: Deep Convolutional GANs (DCGAN)
 Transposed convolution to go from narrow and deep layers to shallow and wide. Was proposed by the original DCGAN paper. In DCGAN there are no maxpool or dense layers - just convolutions. They also use batch normalization at each layer. Generator is responsible for upsampling noise to images. Discriminator by analogy is used to downsample images and similary does not use any maxpool or dense layers.
 
 Batch norm is an important factor in making DCGAN work. Proposed in 2015 as a technique to accelerate deep network training. Essentially at every layer the input is normalized to have a mean of 0 and std of 1.
 
 #### Links:
-- [1] [Batch Normalization in DL book](http://www.deeplearningbook.org/contents/optimization.html)
-- [2] [Example in DL Udacity lab](https://github.com/udacity/deep-learning/tree/master/dcgan-svhn)
+1. [Batch Normalization in DL book](http://www.deeplearningbook.org/contents/optimization.html)
+2. [Example in DL Udacity lab](https://github.com/udacity/deep-learning/tree/master/dcgan-svhn)
 
 
+***
 ### Lesson 18: Semisupervised Learning
 
 Semisupervised learning using GAN to improve the performance of the classifier. Semi-supervised means that the model will be training both on the labeled data as well as on unlabeled data. When we use GANs to generate images the Generator is the main goal, while Discriminator is of secondary importance. In semi-supervised learning Discriminator is the goal.
@@ -691,9 +706,10 @@ To achieve we change the output of D to softmax having N real classes + 1 class 
 Overall semi-supervised learning with GANs is easier to achieve than a good image generation with GANs.
 
 #### Links:
-- [1] [Example in DL Udacity Lab](https://github.com/udacity/deep-learning/tree/master/semi-supervised)
+1. [Example in DL Udacity Lab](https://github.com/udacity/deep-learning/tree/master/semi-supervised)
 
 
+***
 ### Lesson 20: Intro to Computer Vision
 Some applications of CV: 
 - self-driving cars
@@ -711,10 +727,11 @@ CV pipeline includes the following steps:
 - prediction/recognition
 
 #### Links:
-[1] [Project repo](https://github.com/udacity/AIND-CV-Mimic)
-[2] [Affectiva emotion as a service](http://www.affectiva.com/)
+1. [Project repo](https://github.com/udacity/AIND-CV-Mimic)
+2. [Affectiva emotion as a service](http://www.affectiva.com/)
 
 
+***
 ### Lesson 21: Natural Language Processing
 Some use cases of NLP:
 - providing an augmented HMI allowing humans to communicate with machine with plain language (i.e. airbnb search case)
@@ -738,17 +755,18 @@ Some of Watson Cognitive APIs/use cases:
 - tone analysis
 
 #### Links:
-- [1] [Watson APIs](https://www.ibm.com/watson/developer/)
+1. [Watson APIs](https://www.ibm.com/watson/developer/)
 
 
+***
 ### Lesson CV-4: Image Representation and Analysis
 
 CV pipeline:
-- Step 1: Input data
-- Step 2: Pre-processing (noise reduction, scaling, changing color)
-- Step 3: Selecting areas of interest (object detection, image segmentation)
-- Step 4: Feature extraction (extracting data about features)
-- Step 5: Prediction/Recognition (object recognition, feature matching)
+1. Input data
+2. Pre-processing (noise reduction, scaling, changing color)
+3. Selecting areas of interest (object detection, image segmentation)
+4. Feature extraction (extracting data about features)
+5. Prediction/Recognition (object recognition, feature matching)
 
 ![cv pipeline](https://d17h27t6h515a5.cloudfront.net/topher/2017/June/5951a571_cv-general-pipeline/cv-general-pipeline.png)
 
@@ -861,6 +879,7 @@ The edge detection workflow is the following:
 
 Canny edge detection is used widely in CV applications and implements the workflow above with some improvements to emphasized edges following the high-pass filter. It is available as a [function](http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_canny/py_canny.html) in OpenCV as well. Note - it is recommended to use 1:2 or 1:3 ratios when defining threshold values for Canny function.
 
+***
 #### Lesson CV-4: Image Segmentation
 
 Image segmentation is the process of dividing image in segment or unique areas of interest. It is done in two ways:
@@ -894,6 +913,7 @@ CNNs can be used for image segmentation as well, although there are not very com
 1. [CNN for Image Segmentation](https://blog.athelas.com/a-brief-history-of-cnns-in-image-segmentation-from-r-cnn-to-mask-r-cnn-34ea83205de4)
 2. [Mask R-CNN](https://arxiv.org/abs/1703.06870)
 
+***
 #### Lesson CV-6: Features and Object Recognition
 
 The most important property of the feature in CV applications is the repeatability, i.e. whether it will be detected in two or more images of the same scene under different conditions.
