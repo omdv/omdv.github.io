@@ -27,17 +27,17 @@ I am using LXC instead of VM, which works great oob. I am also trying to use unp
 
 Transfer ssh key to host: `cat ~/.ssh/id_rsa.pub | ssh root@192.168.0.xxx 'cat >> .ssh/authorized_keys'`
 
-## 2a. Useful Proxmox snippets
+### 2a. Useful Proxmox snippets
 
 - Find out ip addr of the container: `pct exec <ID> -- ip addr`
 - List/download templates: `pveam available`
 - Bind folder or edit /etc/pve/lxc/<ID>.conf: `pct set <ID> -mp0 /pool/storage,mp=/srv/storage`
 
-## 2b. Unpriviliged Turnkey Linux Containers
+### 2b. Unpriviliged Turnkey Linux Containers
 
 There are plenty of templates based on Turnkey linux for most popular self-hosted services. The only issue I found is that Turnkey LXCs does not support unpriviliged option during creation. There is a method, however, to [solve it](https://forum.proxmox.com/threads/unprivileged-containers.26148/page-2). The description got it slightly wrong - you need to take backup _after_ you removed random and urandom. Otherwise it works great.
 
-## 2c. Creating shared folders
+### 2c. Creating shared folders
 
 For most of the services there is no benefit in keeping data in the mounted folder on the host. Situation gets even bit more complexed if you want to share the folder with the unpriviliged container. Instead of matching permissions exactly I just `chmod 777` for all shared folders.
 
@@ -74,19 +74,19 @@ I am using TIG (telegraf-influxdb-grafana) stack for monitoring at the host leve
 
 List of monitoring related services with notes is below.
 
-## 6a. InfluxDB
+### 6a. InfluxDB
 
 Influxdb runs inside unpriviliged Alpine LXC in a tiny container (1Gb space, 256Mb RAM). Just install using apk and add to [startup scripts](https://www.cyberciti.biz/faq/how-to-enable-and-start-services-on-alpine-linux/). I had an issue with service crashing, as the `/etc/network/interfaces` was missing the `lo loopback interface`. Don't forget to enable the HTTP binding in `/etc/influxdb/influxdb.conf`, otherwise I left configuration untouched. Also add to Proxmox level backup and auto-startup.
 
-## 6b. Grafana
+### 6b. Grafana
 
 You can run a compiled binary on Alpine if you [install glibc](https://github.com/sgerrand/alpine-pkg-glibc). However then you have to create a service to run at boot time, add user, so on. So I decided to use familiar debian LXC instead. Installed using apt-get. Don't forget to enable systemctl service to start on boot.
 
-## 6c. Telegraf
+### 6c. Telegraf
 
 Just install directly on the host, move configuration file to directory on ZFS pool to enable backup and symlink to `/etc/telegraf/`. Point influxdb in configuration file to IP from 7a.
 
-## 6d. Additional monitoring utilities
+### 6d. Additional monitoring utilities
 
 Some additional utilities to get parameters not available directly in telegraf:
 - `hddtemp` for drive temperature monitoring
