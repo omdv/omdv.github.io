@@ -44,6 +44,19 @@ There are plenty of templates based on Turnkey linux for most popular self-hoste
 
 For most of the services there is no benefit in keeping data in the mounted folder on the host. Situation gets even bit more complexed if you want to share the folder with the unpriviliged container. Instead of matching permissions exactly I changed permissions to `777` for all shared folders.
 
+#### 2d. Setting up email and ZED
+
+[Working guide](https://ubuntuforums.org/showthread.php?t=2404713&p=13811934#post13811934) for setting up zfs daemon for health notifications and also setting up email with external smtp. I used fastmail with app-specific password. After setting up zed use cron to schedule scrubs twice a month.
+
+#### 2e. SMART tests
+
+Use [smartd](https://wiki.archlinux.org/index.php/S.M.A.R.T.) to track smart attributes and schedule short/long tests. The actual service is actually `smartmontools`, [guide](https://help.ubuntu.com/community/Smartmontools).
+
+Also use [telegraf plugin](https://github.com/influxdata/telegraf/tree/master/plugins/inputs/smart) to collect attributes and health info for dashboard. Give telegraf user sudo access to run just smartctl:
+```
+telegraf ALL=(ALL) NOPASSWD: /usr/sbin/smartctl
+```
+
 # 3. Reverse proxy server (ID 100)
 
 Initially I set it up using Nginx Turnkey Linux container, but then I followed this alpine [guide](https://wiki.alpinelinux.org/wiki/Nginx_as_reverse_proxy_with_acme_(letsencrypt)) and it worked great. I did few changes however. The certificates are generated using `certbot` inside web hosting app containers, which are described below. The generated certificates are stored in the shared folder on the host. Renewal is handled by web containers as well. So nginx container is just using letsencrypt certificates and DH certificate. Sidenotes:
@@ -70,6 +83,9 @@ I had PLEX running on my Raspberry Pi. For the server I tried Turnkey Mediaserve
 # 5. Turnkey Nextcloud
 
 Ended up not mounting any host folders and leaving it isolated as is. Use Turnkey `confconsole` to get letsencrypt certificate for the domain.
+
+# 5a. Seafile option
+Use centos and script, do "yum install which" to prevent python check from failing before executing script.
 
 # 6. Monitoring
 
@@ -142,3 +158,7 @@ Test accuracy: 0.9917
 ```
 
 According to Grafana it took about 6min of GPUs time with temperature raising up to 53 degC. The average time of epoch is 31s compated to an average of 142s on my mid-2015 13" MacBook Pro with ~330% CPU load and associated noise and heat, so not bad for a $50 card.
+
+# 8. Backup
+
+Use homelab machine as borg backup server for all computers inside the network, as well as for itself. Then I use rclone to sync the deduplicated borg repository with B2. How to [daemonize rclone](https://forum.rclone.org/t/rclone-daemonized/648/8).
