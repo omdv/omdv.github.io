@@ -7,7 +7,7 @@ description: My notes while building and setting up homelab server.
 
 # Introduction
 
-My notes for a process of building and setting up a homelab server for self-hosting various applications. This is not intended to be a complete and elaborate guide, but rather a list of references I used, as well as some lessons learned, scripts I found to be useful, etc.
+My notes for a process of building and setting up a homelab server for self-hosting various applications. It started as an effort to capture some of manual steps. With time, however, I replaced many of these with ansible playbook, which can be found on my github.
 
 # 1. Hardware
 
@@ -17,102 +17,54 @@ I ended up basing my build around the iconic [Fractal Design Node 304 mini ITX c
 
 The build process was relatively straightforward. The motherboard PSU cable turned out to occupy most of the free space inside the Node 304. Currently I have only 1 SSD and 2 mirrored HDD drives, so I removed one of HDD bays and it fits OK. However I will likely be ordering the custom-length PSU cables to fit all 6 3.5" HDDs in the future. There are several companies who offer those, e.g. [CableMod](https://cablemod.com). I also had to replace the included 140mm fan by Noctua's one as Fractal's was quite noisy. Now the server sits right under my TV set in the living room and noone can hear that it is on.
 
-# 2. Installing Host OS
+# 2. Setting up the host ("setup-server" role)
 
-I selected Proxmox with ZFS mirror (hence 2x 2TB HDDs to start with). Will also be using SSD cache for ZFS pool - for now I have one 2.5" SSD installed for this, but in the future it makes sense to switch to PCIe 2.0 SSD to keep all 3x bays and 6x HDDs.
+After using proxmox for a month with linux containers I decided to switch to Ubuntu Server LTS 18.04 with a mix of LXD and docker.
 
-This [guide](https://blog.evilgeniustech.com/proxmox-with-zfs-raidz-ssd-caching/) works great. Before the first `apt-get update` don't forget to get the GPG key via `wget -O- "http://download.proxmox.com/debian/key.asc" | apt-key add -`.
+Ubuntu partitions, assuming 256Gb SSD:
+182G /
+200Mb /boot
+32G ext4 zfs cache, not mounted
+8G ext4 zfs log, not mounted
+16G ext4 linux swap
 
-I am using LXC instead of VM, which works great oob. I am also trying to use unpriviliged containers whenever possible. The only potential complexity is if you want to share some folders on the host with containers.
+Implemented ansible tasks:
+- connecting to existing zfs pool and setting up cache/log
+- configure ZFS event daemon
+- install and configure email (smtp only)
+- install and configure smartmontools
+- install and configure docker
+- install and configure lxd with public ips
 
-Transfer ssh key to host: `cat ~/.ssh/id_rsa.pub | ssh root@192.168.0.xxx 'cat >> .ssh/authorized_keys'`
+**References**
+[proxmox installation](https://blog.evilgeniustech.com/proxmox-with-zfs-raidz-ssd-caching/)
+[zed setup](https://ubuntuforums.org/showthread.php?t=2404713&p=13811934#post13811934)
+[telegraf smart plugin](https://github.com/influxdata/telegraf/tree/master/plugins/inputs/smart)
+[S.M.A.R.T.](https://wiki.archlinux.org/index.php/S.M.A.R.T.)
+[smartmontools](https://help.ubuntu.com/community/Smartmontools)
+[docker on ubuntu](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-18-04)
+[cuda on ubuntu](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html)
 
-#### 2a. Useful Proxmox snippets
+**TODO**
+- unattended upgrades
+- telegraf smartctl
+- schedule bi-monthly scrubs
+- docker remote api certs
 
-- Find out ip addr of the container: `pct exec <ID> -- ip addr`
-- List/download templates: `pveam available`
-- Bind folder or edit /etc/pve/lxc/<ID>.conf: `pct set <ID> -mp0 /pool/storage,mp=/srv/storage`
-- Shrink size by backing up, restoring with e.g. `pct restore 101 /pool/dump/vzdump-<ID> --rootfs zfs-containers:4 --unprivileged 1`
-- Assing static IP addresses to be equal to CT <ID>, i.e. start from 196.168.0.100/24
-- I'll use 100-200 IP/ID range for constantly running apps, and 200+ for those launched on demand
+# 3. Setting up applications ("setup-docker" role)
 
-#### 2b. Unpriviliged Turnkey Linux Containers
+List of tasks/applications:
+- Plex
+- Filebrowser
+- Transmission with openVPN
+- Grafana
+- Watchtower
+- Traefik
+- Portainer
 
-There are plenty of templates based on Turnkey linux for most popular self-hosted services. The only issue I found is that Turnkey LXCs does not support unpriviliged option during creation. There is a method, however, to [solve it](https://forum.proxmox.com/threads/unprivileged-containers.26148/page-2). The description got it slightly wrong - you need to take backup _after_ you removed random and urandom. Otherwise it works great.
+All containers are launched using ansible directly and connected to bridge network to be exposed via traefik. This stack of applications is not expected to be exposed on external network, traefik is used mostly to simplify navigation by using "app.local" host names.
 
-#### 2c. Creating shared folders
-
-For most of the services there is no benefit in keeping data in the mounted folder on the host. Situation gets even bit more complexed if you want to share the folder with the unpriviliged container. Instead of matching permissions exactly I changed permissions to `777` for all shared folders.
-
-#### 2d. Setting up email and ZED
-
-[Working guide](https://ubuntuforums.org/showthread.php?t=2404713&p=13811934#post13811934) for setting up zfs daemon for health notifications and also setting up email with external smtp. I used fastmail with app-specific password. After setting up zed use cron to schedule scrubs twice a month.
-
-#### 2e. SMART tests
-
-Use [smartd](https://wiki.archlinux.org/index.php/S.M.A.R.T.) to track smart attributes and schedule short/long tests. The actual service is actually `smartmontools`, [guide](https://help.ubuntu.com/community/Smartmontools).
-
-Also use [telegraf plugin](https://github.com/influxdata/telegraf/tree/master/plugins/inputs/smart) to collect attributes and health info for dashboard. Give telegraf user sudo access to run just smartctl:
-```
-telegraf ALL=(ALL) NOPASSWD: /usr/sbin/smartctl
-```
-
-# 3. Reverse proxy server (ID 100)
-
-Initially I set it up using Nginx Turnkey Linux container, but then I followed this alpine [guide](https://wiki.alpinelinux.org/wiki/Nginx_as_reverse_proxy_with_acme_(letsencrypt)) and it worked great. I did few changes however. The certificates are generated using `certbot` inside web hosting app containers, which are described below. The generated certificates are stored in the shared folder on the host. Renewal is handled by web containers as well. So nginx container is just using letsencrypt certificates and DH certificate. Sidenotes:
-- mount the shared host `www` folder to `/mnt/www` as nginx creates its own in `/var/www`.
-- when restoring container under different ID i had an issue with `/var/tmp/nginx` folder missing. Just create it with `nginx:nginx` owner and 700 permissions.
-
-# 4. Turnkey Torrent Server (ID 101)
-
-Install and use the method above to convert to unpriviliged. `adduser <ID>` and then `smbpasswd -a <ID>` to create a new user and add it to samba. Use webmin to configure access to mounted folder or `vi /etc/samba/smb.conf`.
-
-I also configured openVPN inside container to limit transmission traffic only to VPN. High level steps:
-- create `tun` on the host
-- share it with unpriviliged container
-- install OpenVPN inside container
-- setup connection by getting settings from provider, create pass.txt and append to .ovpn file.
-- [start on boot](https://askubuntu.com/questions/464264/starting-openvpn-client-automatically-at-boot)
-- [bug](Bug inside unpriviliged container: https://askubuntu.com/questions/747023/systemd-fails-to-start-openvpn-in-lxd-managed-16-04-container?newreg=752ad6b8c92b48b5bfc08b44f6185692) when trying to start on boot
-- [use iptables](https://askubuntu.com/questions/37412/how-can-i-ensure-transmission-traffic-uses-a-vpn) to limit transmission only to VPN
-
-# 5. Media Server (ID 102)
-
-I had PLEX running on my Raspberry Pi. For the server I tried Turnkey Mediaserver with Emby, however it was painfully slow on our Samsung SmartTV, so had to switch back to PLEX. I installed it from apt repository on Debian container. Obviously mount the shared folders and open them from inside the app.
-
-# 5. Turnkey Nextcloud
-
-Ended up not mounting any host folders and leaving it isolated as is. Use Turnkey `confconsole` to get letsencrypt certificate for the domain.
-
-# 5a. Seafile option
-Use centos and script, do "yum install which" to prevent python check from failing before executing script.
-
-# 6. Monitoring
-
-I am using TIG (telegraf-influxdb-grafana) stack for monitoring at the host level. Grafana and influxdb run as LXC, while telegraf runs at host level to get access to system-level parameters.
-
-List of monitoring related services with notes is below.
-
-#### 6a. InfluxDB (ID 104)
-
-Influxdb runs inside unpriviliged Alpine LXC in a tiny container (1Gb space, 256Mb RAM). Install using apk and add to [startup scripts](https://www.cyberciti.biz/faq/how-to-enable-and-start-services-on-alpine-linux/). I had an issue with service crashing, as the `/etc/network/interfaces` was missing the `lo loopback interface`. Don't forget to enable the HTTP binding in `/etc/influxdb/influxdb.conf`, otherwise I left configuration untouched. Also add to Proxmox level backup and auto-startup.
-
-#### 6b. Grafana (ID 105)
-
-You can run a compiled binary on Alpine if you [install glibc](https://github.com/sgerrand/alpine-pkg-glibc). However then you have to create a service to run at boot time, add user, so on. So I decided to use familiar debian LXC instead. Installed using apt-get. Don't forget to enable systemctl service to start on boot.
-
-#### 6c. Telegraf
-
-Install directly on the host, move configuration file to directory on ZFS pool to enable backup and symlink to `/etc/telegraf/`. Point influxdb in configuration file to IP from 7a.
-
-#### 6d. Additional monitoring utilities
-
-Some additional utilities to get parameters not available directly in telegraf:
-- `hddtemp` for drive temperature monitoring
-- [Proxmox external metrics](https://pve.proxmox.com/wiki/External_Metric_Server), influxdb has to have UDP enabled.
-- `nvidia-smi` is available oob, see instructions below on GPU part
-
-# 7. Web Server (ID 107)
+# 7. Setting up web server - OLD NOTES
 
 Running nodejs web server in Alpine LXC. Steps to set up are the following. Update apk and install openssh and sudo. Add sudo user (visudo) for ssh access. Install node `apk add nodejs nodejs-npm` and pm2 by `npm install -g pm2`. Create a non-sudo `www` user. Mount your web app folder from proxmox host zpool and chmod to 777 to allow read/write to everyone. Generate pm2 startup scripts for www user. Launch all nodejs apps and save them with pm2 to persist. pm2 will also be responsible for restarting apps.
 
@@ -127,7 +79,7 @@ This [tutorial](https://www.sitepoint.com/how-to-use-ssltls-with-node-js/) has s
 
 One such LXC can take care of multiple apps - just need to assign different ports, so that nginx reverse proxy can redirect correspondingly.
 
-# 7. Python / Deep Learning (ID 200)
+# 8. Python / Deep Learning - OLD NOTES
 
 [This guide](https://medium.com/@MARatsimbazafy/journey-to-deep-learning-nvidia-gpu-passthrough-to-lxc-container-97d0bc474957) has a lot of good information, but needs few adjustments.
 
@@ -159,6 +111,6 @@ Test accuracy: 0.9917
 
 According to Grafana it took about 6min of GPUs time with temperature raising up to 53 degC. The average time of epoch is 31s compated to an average of 142s on my mid-2015 13" MacBook Pro with ~330% CPU load and associated noise and heat, so not bad for a $50 card.
 
-# 8. Backup
+# 9. Backup - OLD NOTES
 
 Use homelab machine as borg backup server for all computers inside the network, as well as for itself. Then I use rclone to sync the deduplicated borg repository with B2. How to [daemonize rclone](https://forum.rclone.org/t/rclone-daemonized/648/8).
