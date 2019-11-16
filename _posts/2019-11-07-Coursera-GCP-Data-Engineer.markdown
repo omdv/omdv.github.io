@@ -169,7 +169,7 @@ E2E BQML process:
 
 Alias a label column as `label` or specify it in options.
 
-#### Lab on BQ ML
+**Lab on BQ ML**
 
 Example of model creation based on Google Analytics dataset with two features and one label:
 
@@ -207,6 +207,7 @@ FROM
   USING (fullVisitorId)
 ;
 ```
+</Lab>
 
 ### Course 1.4 - Create Streaming Data Pipelines with Cloud Pub/sub and Cloud Dataflow
 
@@ -235,8 +236,9 @@ Some dashboard tips:
 - below have sections with details, starting with the question "What are the sales channels?" to grab user attention
 - you can fix time filters to some specific periods
 
-##### Lab
+** Lab **
 Lab on setting up a Dataflow pipeline connecting to the public pub/sub topic on NY taxi rides, outputting the results to BQ. Creating a SQL query on BQ to output the summary of rides with passengers, rides and total revenue. Connecting Datastudio for creation of the streaming dashboard.
+</Lab>
 
 #### Links
 1. [Cloud Pub/Sub documentation](https://cloud.google.com/pubsub/docs/)
@@ -322,7 +324,7 @@ Preemptible VMs are up to 80% cheaper than standard. Use PVMs only for processin
 Dataproc includes some of the most common Hadoop frameworks: Hive, Pig and Spark.
 Hive is declarative, Pig is imperative.
 
-#### Lab - Hive and Pig jobs
+**Lab - Hive and Pig jobs**
 
 Example of Pig job:
 ```
@@ -337,4 +339,22 @@ store x5 into '/GroupedByType';
 
 Pig provides SQL primitives similar to Hive, but in a more flexible scripting language format. Pig can also deal with semi-structured data, such as data having partial schemas, or for which the schema is not yet known. For this reason it is sometimes used for Extract Transform Load (ETL). It generates Java MapReduce jobs. Pig is not designed to deal with unstructured data.
 
-#### Separation of storage and compute resources
+</Lab>
+
+Bring the data to compute - vertical scaling. As we moved to the distributed computing one approach was to keep data local to machines in the cluster. However given the MTBF of modern drives the reliability of such approach is quite low. In 2002 Google introduced Google File System to introduce redundant file system.
+
+In 2006 Google develops BigTable and BQ Query Language. Colossus is around same time and is a replacement of GFS and is foundation of Cloud Storage.
+
+Nowadays GCP has a mix of PC or cluster-based products (Dataproc), managed services (Cloud SQL) and completely serverless abstract services (BQ, Dataflow, ML products, etc).
+
+If you look at replacing the on-premise ETL pipeline with GCP it will roughly consist of:
+- Pub/Sub for Ingest
+- Dataflow for Processing
+- BigQuery for Analysis
+
+#### Networking
+
+In distributed architecture networking has to manage horizontal (East-West) communications vs vertical (South-North) in case of traditional client-server applications. With petabyte bisectional bandwidth the data may be stored separately from compute.
+
+#### Links
+1. [Storage services]({{ site.url }}/assets/GCP_Dataproc_storage_services.pdf)
