@@ -236,7 +236,7 @@ Some dashboard tips:
 - below have sections with details, starting with the question "What are the sales channels?" to grab user attention
 - you can fix time filters to some specific periods
 
-** Lab **
+**Lab**
 Lab on setting up a Dataflow pipeline connecting to the public pub/sub topic on NY taxi rides, outputting the results to BQ. Creating a SQL query on BQ to output the summary of rides with passengers, rides and total revenue. Connecting Datastudio for creation of the streaming dashboard.
 </Lab>
 
@@ -308,9 +308,11 @@ Dataproc customization:
 
 Don't use HDFS for cloud storage. Dataproc cluster should be stateless, so you can turn it on/off as needed.
 
-#### Lab - Creating Hadoop cluster and exploring it
+**Lab - Creating Hadoop cluster and exploring it**
 
 Create a VM to control the cluster. SSH into a vm. Setup environment variables (not sure why, as all provisioning was done in WebUI). Setup and start the 3-worker node cluster. Create firewall rule using a network tag. Make sure that cluster master has a right network tag. Connect to its public IP to see Hadoop cluster status.
+</Lab>
+
 
 #### Choosing the right size of your VMs
 
@@ -356,5 +358,386 @@ If you look at replacing the on-premise ETL pipeline with GCP it will roughly co
 
 In distributed architecture networking has to manage horizontal (East-West) communications vs vertical (South-North) in case of traditional client-server applications. With petabyte bisectional bandwidth the data may be stored separately from compute.
 
+#### Submitting Spark jobs
+
+Spark jobs can be submitted from master node, but the preferred method is to submit from cluster console or gcloud console.
+
+Easiest way to migrate:
+1. Copy data to GCP Cloud Storage
+2. Update file links from `hdfs` to `gs://`
+3. Upload Spark jobs
+
+Spark uses RDD and manages all infrastructure. Spark has Lazy evaluation and uses DAGs to store jobs. And it chooses the most effective way to organize and implement jobs, given other jobs and available resources.
+
+**Lab - Submit Dataproc jobs for unstructured data v1.3**
+
+Create dataproc, explore pyspark in interactive commands. Create and submit a job to process two text files:
+
+```
+from pyspark.sql import SparkSession
+from operator import add
+import re
+
+print("Okay Google.")
+
+spark = SparkSession\
+        .builder\
+        .appName("CountUniqueWords")\
+        .getOrCreate()
+
+lines = spark.read.text("/sampledata/road-not-taken.txt").rdd.map(lambda x: x[0])
+counts = lines.flatMap(lambda x: x.split(' ')) \
+                  .filter(lambda x: re.sub('[^a-zA-Z]+', '', x)) \
+                  .filter(lambda x: len(x)>1 ) \
+                  .map(lambda x: x.upper()) \
+                  .map(lambda x: (x, 1)) \
+                  .reduceByKey(add) \
+                  .sortByKey()
+output = counts.collect()
+for (word, count) in output:
+  print("%s = %i" % (word, count))
+
+spark.stop()
+```
+
+</Lab>
+
+TL;DR: We explored three intefaces to submit Dataproc jobs - Hive, Pig and Spark.
+
+#### Leveraging GCP when working with Dataproc - BigQuery and Cluster Optimization
+
+Dataproc cannot work directly with BQ, but we can use GCS as an intermediary to connect the two. One option is to export data from BQ in shards to GCS, so Dataproc can consume it from there. Symmetrically Dataproc can export data to GCS, which can be imported to BQ. Second options is to use the PySpark connector to BigQuery. You cannot run a query inside the connector, so you should run a query in BQ, export it and then import to RDD.
+
+One more option is to use Pandas. Pandas can read from BQ and Dataproc (pyspark) can work with pandas. Pandas dataframe (easy to use, mutable) can be converted into Spark dataframe (faster, immutable).
+
+**Lab - Leverage GCP**
+Explore Spark using PySpark jobs, use Cloud Storage instead of HDFS, and run a PySpark application from Cloud Storage.
+
+Same as previous lab, except:
+- files are served from GCS
+- job was submitted via pyspark and also via Dataproc job interface in GCP
+</Lab>
+
+Dataproc can read and write to: BigTable, BigQuery, CloudStorage, etc.
+
+You can also install various OSS frameworks on Dataproc clusters (e.g. Kafka). Installation scripts can help with installing OSS on master or worker nodes (e.g. Cloud Datalab). You need to create a script (bash, python), upload to GCS and specify location during Dataproc creation.
+
+**Lab - Cluster automation using CLI commands**
+In this lab, you will create a cluster using CLI commands and learn about the Dataproc-GCP workflow and workflow automation.
+
+Steps:
+- SSH to compute VM
+- clone training repository, update init-script to install python and clone repo to all nodes
+- create Dataproc cluster with two custom init-scripts, see below
+- wait for creation and validate Datalab installation
+
+```
+gcloud dataproc clusters create cluster-custom \
+--bucket $BUCKET \
+--subnet default \
+--zone $MYZONE \
+--region $MYREGION \
+--master-machine-type n1-standard-2 \
+--master-boot-disk-size 100 \
+--num-workers 2 \
+--worker-machine-type n1-standard-1 \
+--worker-boot-disk-size 50 \
+--num-preemptible-workers 2 \
+--image-version 1.2 \
+--scopes 'https://www.googleapis.com/auth/cloud-platform' \
+--tags customaccess \
+--project $PROJECT_ID \
+--initialization-actions 'gs://'$BUCKET'/init-script.sh','gs://cloud-training-demos/dataproc/datalab.sh'
+```
+
+
+Creating firewall rule for Dataproc
+```
+gcloud compute \
+--project=$PROJECT_ID \
+firewall-rules create allow-custom \
+--direction=INGRESS \
+--priority=1000 \
+--network=default \
+--action=ALLOW \
+--rules=tcp:9870,tcp:8088,tcp:8080 \
+--source-ranges=$BROWSER_IP/32 \
+--target-tags=customaccess
+```
+</Lab>
+
+**Lab - Leveraging ML**
+
+Three pyspark jobs using NLP ML APIs:
+
+```
+#!/usr/bin/env python
+# Copyright 2018 Google Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+'''
+  This program takes a sample text line of text and passes to a Natural Language Processing
+  services, sentiment analysis, and processes the results in Python.
+  
+'''
+
+import logging
+import argparse
+import json
+
+import os
+from googleapiclient.discovery import build
+
+from pyspark import SparkContext
+sc = SparkContext("local", "Simple App")
+
+'''
+You must set these values for the job to run.
+'''
+APIKEY="AIzaSyDqqwkFJ3y7tGnBKXM4eFFAoLWpWtdLXCk"   # CHANGE
+print(APIKEY)
+PROJECT_ID="qwiklabs-gcp-00-621c25f27aea"  # CHANGE
+print(PROJECT_ID) 
+BUCKET="qwiklabs-gcp-00-621c25f27aea"   # CHANGE
+
+
+## Wrappers around the NLP REST interface
+
+def SentimentAnalysis(text):
+    from googleapiclient.discovery import build
+    lservice = build('language', 'v1beta1', developerKey=APIKEY)
+
+    response = lservice.documents().analyzeSentiment(
+        body={
+            'document': {
+                'type': 'PLAIN_TEXT',
+                'content': text
+            }
+        }).execute()
+    
+    return response
+
+## main
+
+sampleline = 'There are places I remember, all my life though some have changed.'
+#
+
+# Calling the Natural Language Processing REST interface
+#
+results = SentimentAnalysis(sampleline)
+
+# 
+#  What is the service returning?
+#
+print("Function returns: ", type(results))
+
+print(json.dumps(results, sort_keys=True, indent=4))
+```
+</Lab>
+
 #### Links
-1. [Storage services]({{ site.url }}/assets/GCP_Dataproc_storage_services.pdf)
+1. [Dataproc storage]({{ site.url }}/assets/GCP_Dataproc_storage_services.pdf)
+2. [Dataproc automation]({{ site.url }}/assets/GCP_Dataproc_automation_services.pdf)
+3. [Cloud functions]({{ site.url }}/assets/GCP_cloud_functions.pdf)
+4. [Dataproc BigQuery connectors]({{ site.url }}/assets/GCP_Dataproc_BQ_connectors.pdf)
+5. [Workflow automation]({{ site.url }}/assets/GCP_Dataproc_workflow_automation.pdf)
+
+
+## Course 3 - Serverless Data Analysis
+
+BigQuery is No-Ops Data Warehousing and Analytics.
+Dataflow is No-Ops Data pipelines for reliable, scalable data processing.
+
+### Course 3.1 - BigQuery
+
+BQ is a part of 2nd generation of Big Data at Google. Dataproc is 1st generation. BQ is beginning of Gen2, done in 2006, Dataflow is from 2014. MapReduce is Gen1 and it had a preliminary step of splitting data into shards in Map step, this is not scaling well, however. Dremel is an internal version of BigQuery, used at Google.
+
+Hierarchy (top to bottom):
+1. Project (billing info, users)
+2. Dataset (organization, access control on dataset basis)
+3. Table (data with schema, you join tables in dataset)
+
+Job stores queries, handles export and copy.
+
+Dataset contains Tables and Views. View is a live view of the Table (it is a query underneath), you can use View to manage access control through "SELECT" and filtering what you want to show. Views are virtual Tables. BigQuery engine can work both with BQ Tables and external sources of information. Job can take seconds to hours, you get charged based on the compute resources used to process the query.
+
+BigQuery storage is columnar, every column is stored in a separate, encrypted, compressed file, replicated 3 times. No indexes, keys. One way to optimize queries is to filter out columns you run the query against.
+
+BQ SQL tips:
+- BQ Query language is 2011 + extensions.
+- Format of table in `FROM` is `<project>.<dataset>.<table>`. If you leave out project it will be the current project by default.
+- You can embed the one query in another as a table and include it in `FROM` field. 
+- Can select from multiple tables, joined by coma
+- Can JOIN ON field across tables inside the query
+- Reminder that GROUP requires aggregation function in SELECT
+
+**Lab 1 - Building BQ Queries**
+
+Examples of queries demonstrating various solutions are below.
+```
+SELECT
+  f.airline,
+  COUNT(f.departure_delay) AS total_flights,
+  SUM(IF(f.departure_delay > 0, 1, 0)) AS num_delayed
+FROM
+   `bigquery-samples.airline_ontime_data.flights` AS f
+WHERE
+  f.departure_airport = 'LGA' AND f.date = '2008-05-13'
+GROUP BY
+  f.airline
+```
+
+Selecting all rainy days for given weather station and joining it on date with `flights` table.
+
+```
+SELECT
+  f.airline,
+  SUM(IF(f.arrival_delay > 0, 1, 0)) AS num_delayed,
+  COUNT(f.arrival_delay) AS total_flights
+FROM
+  `bigquery-samples.airline_ontime_data.flights` AS f
+JOIN (
+  SELECT
+    CONCAT(CAST(year AS STRING), '-', LPAD(CAST(month AS STRING),2,'0'), '-', LPAD(CAST(day AS STRING),2,'0')) AS rainyday
+  FROM
+    `bigquery-samples.weather_geo.gsod`
+  WHERE
+    station_number = 725030
+    AND total_precipitation > 0) AS w
+ON
+  w.rainyday = f.date
+WHERE f.arrival_airport = 'LGA'
+GROUP BY f.airline
+```
+</Lab>
+
+#### Loading and Exporting Data to BigQuery
+
+Data may arrive from multiple different ingestions and capturing services. It will goes through processing service, such as Dataproc or Dataflow. Dataflow can treat both batch and streaming data. It will get stored either in objects in Cloud Storage or in tables in BigQuery storage. For analysis it may go through BigQuery Analytics service (SQL). And eventually it will end in either one of 3rd party services or in DataStudio.
+
+You can also load data into BigQuery using CLI, WebUI, API
+
+**Lab 2 - Loading and Exporting data**
+
+Loading data from cloud shell.
+```
+bq load --source_format=NEWLINE_DELIMITED_JSON $DEVSHELL_PROJECT_ID:cpb101_flight_data.flights_2014 gs://cloud-training/CPB200/BQ/lab4/domestic_2014_flights_*.json ./schema_flight_performance.json.dumps
+```
+
+Exporting to gcs bucket:
+```
+bq extract cpb101_flight_data.AIRPORTS gs://$BUCKET/bq/airports2.csv
+```
+</Lab>
+
+#### Advanced Capabilities in BigQuery
+
+BQ supports all standard SQL data types.
+`WITH` statement allows to use subqueries before `SELECT`.
+`COUNT(DISTINCT)` function.
+
+**Normalization**
+Normalizing the data means turning it into a relational system. This stores the data efficiently and makes query processing a clear and direct task. Normalizing increases the orderliness of the data. Denormalizing is the strategy of accepting repeated fields in the data to gain processing performance. Data must be normalized before it can be denormalized. Denormalization is another increase in the orderliness of the data. Because of the repeated fields, in the example, the Name field is repeated, the denormalized form takes more storage. However, because it no longer is relational, queries can be processed more efficiently and in parallel using columnar processing.
+
+Nested columns can be understood as a form of repeated field. It preserves the relationalism of the original data and schema while enabling columnar and parallel processing of repeated nested fields. Nested and repeated fields helps BigQuery more easily interact with existing databases enabling easier transitions to BigQuery and hybrid solutions where BigQuery is used in conjunction with traditional databases.
+
+Other topics covered:
+- `STRUCT`
+- `ARRAY`
+- `UNNEST`
+- `JOIN` on equality conditions and any other conditions, including functions, returning boolean, e.g. `STARTS_WITH`
+- Standard aggregation functions
+- Navigation functions: `LEAD()`, `LAG()`, `NTH_VALUE()`
+- Ranking and numbering functions: `CUME_DIST`, `DENSE_RANK`, etc
+- Date and time functions (BQ uses EPOCH time)
+- User-defined functions: SQL UDF, External UDFs in JavaScript
+- UDF constraints - should return <5Mb of data per row, not native JS (and it is 32bits)
+
+**Lab - Advanced BQ**
+
+Quering github to find the most common language used on weekend:
+
+```
+WITH commits AS (
+  SELECT
+    author.email,
+    EXTRACT(DAYOFWEEK
+    FROM
+      TIMESTAMP_SECONDS(author.date.seconds)) BETWEEN 2
+    AND 6 is_weekday,
+    LOWER(REGEXP_EXTRACT(diff.new_path, r'\.([^\./\(~_ \- #]*)$')) lang,
+    diff.new_path AS path,
+    TIMESTAMP_SECONDS(author.date.seconds) AS author_timestamp
+  FROM
+    `bigquery-public-data.github_repos.commits`,
+    UNNEST(difference) diff
+  WHERE
+    EXTRACT(YEAR
+    FROM
+      TIMESTAMP_SECONDS(author.date.seconds))=2016)
+SELECT
+  lang,
+  is_weekday,
+  COUNT(path) AS numcommits
+FROM
+  commits
+WHERE
+  lang IS NOT NULL
+GROUP BY
+  lang,
+  is_weekday
+HAVING
+  numcommits > 100
+ORDER BY
+  numcommits DESC
+```
+</Lab>
+
+#### Performance and Pricing
+
+Less work -> Faster query
+Work:
+- I/O
+- Shuffle - how many bytes are passed to next stage
+- Grouping - how much is passed to every group
+- Materialization - how many bytes did you write
+- CPU - number and complexity of UDFs
+
+Tips:
+1. Don't project unnecessary columns.
+2. Filter and do `WHERE` as early as possible
+3. Do biggest JOINs first, filter before JOINs
+4. When you do GROUPing, consider how many rows are passed. Low cardinality keys/groups - faster
+5. High cardinality may also lead to long tailing, shuffling and lots of groups with only 1 member
+6. Built-in functions are more effective than SQL UDFs and even more than Javascript UDFs
+7. Check if there is an approximate built-in function close to what you expect
+8. `ORDER` goes on the outermost query
+9. Use wildcards in table names.
+10. Partition table based on the time-stamp, BigQuery can do it automatically. So, one table with `_PARTITIONTIME`
+11. Use Explanation Plans to understand query performance
+
+BiqQuery Plans:
+- Search for significant difference between avg and max time
+- Time spent on reading from previous stage
+- Time spent on Compute
+
+Monitor BQ with StackDriver.
+
+Three categories of BQ pricing:
+- Free queries
+- Processing queries
+- Storage queries
+
+#### Links
+1. [BigQuery Samples]({{ site.url }}/assets/GCP_Dataproc_storage_services.pdf)
