@@ -739,5 +739,546 @@ Three categories of BQ pricing:
 - Processing queries
 - Storage queries
 
+### Course 3.2 - Dataflow
+
+Dataflow pipeline (Apache Beam) can be written in Java or Python. Each step in a pipeline is called _transform_, the pipeline is executed by _runner_. You start with _source_, end with _sink_. What is passed from _transform_ to _transform_ is parallel collection or _pcollection_. This collection does not need to be bound or fit in memory, so it can be processed in parallel.
+
+We first create a pipeline as a directed graph, and then run it using _runner_.
+
+Python API is actually using `apache_beam`. You can use lambda functions in pipeline steps. The best practice is to use a name for each transform. This allows to see it on the Dataflow status page and most importantly allows to replace the code of the transform in the running pipeline without losing the data.
+
+Input: Reading data from text, GCS, BQ, etc. Input returns _pcollection_, which is sharded. You can prevent sharding of files specifically by `.withoutSharding()`.
+
+You can run pipeline as python script locally. To run pipeline on Dataflow you need to pass several additional arguments, such as ProjectID, staging area on gcs and specify Dataflow runner. Same story for Java, but with maven.
+
+**Lab 1 - Simple Dataflow Pipeline**
+
+[Lab content](https://github.com/GoogleCloudPlatform/training-data-analyst/tree/master/courses/data_analysis/lab2).
+
+Job code:
+```
+#!/usr/bin/env python
+import apache_beam as beam
+
+def my_grep(line, term):
+   if line.startswith(term):
+      yield line
+
+PROJECT='qwiklabs-gcp-00-90bd24073b39'
+BUCKET='qwiklabs-gcp-00-90bd24073b39'
+
+def run():
+   argv = [
+      '--project={0}'.format(PROJECT),
+      '--job_name=examplejob2',
+      '--save_main_session',
+      '--staging_location=gs://{0}/staging/'.format(BUCKET),
+      '--temp_location=gs://{0}/staging/'.format(BUCKET),
+      '--runner=DataflowRunner'
+   ]
+
+   p = beam.Pipeline(argv=argv)
+   input = 'gs://{0}/javahelp/*.java'.format(BUCKET)
+   output_prefix = 'gs://{0}/javahelp/output'.format(BUCKET)
+   searchTerm = 'import'
+
+   # find all lines that contain the searchTerm
+   (p
+      | 'GetJava' >> beam.io.ReadFromText(input)
+      | 'Grep' >> beam.FlatMap(lambda line: my_grep(line, searchTerm) )
+      | 'write' >> beam.io.WriteToText(output_prefix)
+   )
+
+   p.run()
+
+if __name__ == '__main__':
+   run()
+```
+</Lab>
+
+#### MapReduce in Dataflow
+
+In python API:
+`Map()` for one-to-one relationship in processing
+`FlatMap()` for not 1-to-1, e.g. for filtering.
+
+Details of `GroupBy`, `Combine` in Java and Python Dataflow APIs.
+
+Combine is more efficient than GroupBy.
+
+**Lab 2 - MapReduce in Dataflow**
+
+[Lab source](https://github.com/GoogleCloudPlatform/training-data-analyst)
+
+Main script
+```
+#!/usr/bin/env python
+import apache_beam as beam
+import argparse
+
+def startsWith(line, term):
+   if line.startswith(term):
+      yield line
+
+def splitPackageName(packageName):
+   """e.g. given com.example.appname.library.widgetname
+           returns com
+             com.example
+                   com.example.appname
+      etc.
+   """
+   result = []
+   end = packageName.find('.')
+   while end > 0:
+      result.append(packageName[0:end])
+      end = packageName.find('.', end+1)
+   result.append(packageName)
+   return result
+
+def getPackages(line, keyword):
+   start = line.find(keyword) + len(keyword)
+   end = line.find(';', start)
+   if start < end:
+      packageName = line[start:end].strip()
+      return splitPackageName(packageName)
+   return []
+
+def packageUse(line, keyword):
+   packages = getPackages(line, keyword)
+   for p in packages:
+      yield (p, 1)
+
+def by_value(kv1, kv2):
+   key1, value1 = kv1
+   key2, value2 = kv2
+   return value1 < value2
+
+if __name__ == '__main__':
+   parser = argparse.ArgumentParser(description='Find the most used Java packages')
+   parser.add_argument('--output_prefix', default='/tmp/output', help='Output prefix')
+   parser.add_argument('--input', default='../javahelp/src/main/java/com/google/cloud/training/dataanalyst/javahelp/', help='Input directory')
+
+   options, pipeline_args = parser.parse_known_args()
+   p = beam.Pipeline(argv=pipeline_args)
+
+   input = '{0}*.java'.format(options.input)
+   output_prefix = options.output_prefix
+   keyword = 'import'
+
+   # find most used packages
+   (p
+      | 'GetJava' >> beam.io.ReadFromText(input)
+      | 'GetImports' >> beam.FlatMap(lambda line: startsWith(line, keyword))
+      | 'PackageUse' >> beam.FlatMap(lambda line: packageUse(line, keyword))
+      | 'TotalUse' >> beam.CombinePerKey(sum)
+      | 'Top_5' >> beam.transforms.combiners.Top.Of(5, by_value)
+      | 'write' >> beam.io.WriteToText(output_prefix)
+   )
+
+   p.run().wait_until_finish()
+```
+</Lab>
+
+#### Side Inputs in Dataflow
+
+Using other data sources outside of what you are processing.
+There are several options, depending on what you are trying to pass:
+- single argument can be passed to `ParDo` as an argument in Dataflow pipeline
+- to pass `PCollection` convert it to `View`, using `asList` or `asMap`, the resulting PCollectionView can be passed to `ParDo.withSideInputs()`. The side input can then be extracted inside ParDo as `.sideInput`.
+
+**Lab 3 - Side Inputs**
+
+Same repository and folder as previous two labs.
+Source for job:
+
+```
+
+"""
+Copyright Google Inc. 2018
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
+import argparse
+import logging
+import datetime, os
+import apache_beam as beam
+import math
+
+'''
+
+This is a dataflow pipeline that demonstrates Python use of side inputs. The pipeline finds Java packages
+on Github that are (a) popular and (b) need help. Popularity is use of the package in a lot of other
+projects, and is determined by counting the number of times the package appears in import statements.
+Needing help is determined by counting the number of times the package contains the words FIXME or TODO
+in its source.
+
+@author tomstern
+based on original work by vlakshmanan
+
+python JavaProjectsThatNeedHelp.py --project <PROJECT> --bucket <BUCKET> --DirectRunner or --DataFlowRunner
+
+'''
+
+# Global values
+TOPN=1000
+
+
+# ### Functions used for both main and side inputs
+
+def splitPackageName(packageName):
+   """e.g. given com.example.appname.library.widgetname
+           returns com
+             com.example
+                   com.example.appname
+      etc.
+   """
+   result = []
+   end = packageName.find('.')
+   while end > 0:
+      result.append(packageName[0:end])
+      end = packageName.find('.', end+1)
+   result.append(packageName)
+   return result
+
+def getPackages(line, keyword):
+   start = line.find(keyword) + len(keyword)
+   end = line.find(';', start)
+   if start < end:
+      packageName = line[start:end].strip()
+      return splitPackageName(packageName)
+   return []
+
+def packageUse(record, keyword):
+   if record is not None:
+     lines=record.split('\n')
+     for line in lines:
+       if line.startswith(keyword):
+         packages = getPackages(line, keyword)
+         for p in packages:
+           yield (p, 1)
+
+def by_value(kv1, kv2):
+   key1, value1 = kv1
+   key2, value2 = kv2
+   return value1 < value2
+
+def is_popular(pcoll):
+ return (pcoll
+    | 'PackageUse' >> beam.FlatMap(lambda rowdict: packageUse(rowdict['content'], 'import'))
+    | 'TotalUse' >> beam.CombinePerKey(sum)
+    | 'Top_NNN' >> beam.transforms.combiners.Top.Of(TOPN, by_value) )
+
+
+def packageHelp(record, keyword):
+   count=0
+   package_name=''
+   if record is not None:
+     lines=record.split('\n')
+     for line in lines:
+       if line.startswith(keyword):
+         package_name=line
+       if 'FIXME' in line or 'TODO' in line:
+         count+=1
+     packages = (getPackages(package_name, keyword) )
+     for p in packages:
+         yield (p,count)
+
+def needs_help(pcoll):
+ return (pcoll
+    | 'PackageHelp' >> beam.FlatMap(lambda rowdict: packageHelp(rowdict['content'], 'package'))
+    | 'TotalHelp' >> beam.CombinePerKey(sum)
+    | 'DropZero' >> beam.Filter(lambda packages: packages[1]>0 ) )
+
+
+# Calculate the final composite score
+#
+#    For each package that is popular
+#    If the package is in the needs help dictionary, retrieve the popularity count
+#    Multiply to get compositescore
+#      - Using log() because these measures are subject to tournament effects
+#
+
+def compositeScore(popular, help):
+    for element in popular:
+      if help.get(element[0]):
+         composite = math.log(help.get(element[0])) * math.log(element[1])
+         if composite > 0:
+           yield (element[0], composite)
+
+
+# ### main
+
+# Define pipeline runner (lazy execution)
+def run():
+
+  # Command line arguments
+  parser = argparse.ArgumentParser(description='Demonstrate side inputs')
+  parser.add_argument('--bucket', required=True, help='Specify Cloud Storage bucket for output')
+  parser.add_argument('--project',required=True, help='Specify Google Cloud project')
+  group = parser.add_mutually_exclusive_group(required=True)
+  group.add_argument('--DirectRunner',action='store_true')
+  group.add_argument('--DataFlowRunner',action='store_true')
+
+  opts = parser.parse_args()
+
+  if opts.DirectRunner:
+    runner='DirectRunner'
+  if opts.DataFlowRunner:
+    runner='DataFlowRunner'
+
+  bucket = opts.bucket
+  project = opts.project
+
+  #    Limit records if running local, or full data if running on the cloud
+  limit_records=''
+  if runner == 'DirectRunner':
+     limit_records='LIMIT 3000'
+  get_java_query='SELECT content FROM [fh-bigquery:github_extracts.contents_java_2016] {0}'.format(limit_records)
+
+  argv = [
+    '--project={0}'.format(project),
+    '--job_name=javahelpjob',
+    '--save_main_session',
+    '--staging_location=gs://{0}/staging/'.format(bucket),
+    '--temp_location=gs://{0}/staging/'.format(bucket),
+    '--runner={0}'.format(runner),
+    '--max_num_workers=5'
+    ]
+
+  p = beam.Pipeline(argv=argv)
+
+
+  # Read the table rows into a PCollection (a Python Dictionary)
+  bigqcollection = p | 'ReadFromBQ' >> beam.io.Read(beam.io.BigQuerySource(project=project,query=get_java_query))
+
+  popular_packages = is_popular(bigqcollection) # main input
+
+  help_packages = needs_help(bigqcollection) # side input
+
+  # Use side inputs to view the help_packages as a dictionary
+  results = popular_packages | 'Scores' >> beam.FlatMap(lambda element, the_dict: compositeScore(element,the_dict), beam.pvalue.AsDict(help_packages))
+
+  # Write out the composite scores and packages to an unsharded csv file
+  output_results = 'gs://{0}/javahelp/Results'.format(bucket)
+  results | 'WriteToStorage' >> beam.io.WriteToText(output_results,file_name_suffix='.csv',shard_name_template='')
+
+  # Run the pipeline (all operations are deferred until run() is called).
+
+
+  if runner == 'DataFlowRunner':
+     p.run()
+  else:
+     p.run().wait_until_finish()
+  logging.getLogger().setLevel(logging.INFO)
+
+
+if __name__ == '__main__':
+  run()
+```
+
 #### Links
 1. [BigQuery Samples]({{ site.url }}/assets/GCP_Dataproc_storage_services.pdf)
+
+## Course 4 - Serverless Machine Learning with TensorFlow
+
+### Course 4.1 - Intro in Machine Learning
+
+Course about serverless ML, CloudML is a serverless TF service.
+Overall pretty good series of lectures with a short introduction to ML.
+Cloud DataLab - hosted Jupyter notebooks.
+
+**Lab - Creating ML dataset**
+Create Datalab environment from GCP console: `datalab create dataengvm --zone us-central1-a`.
+
+[Specific lab notebook](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/machine_learning/datasets/create_datasets.ipynb)
+</Lab>
+
+#### Links
+1. [ML Intro]({{ site.url }}/assets/GCP_DataEngineer_ML_Intro.pdf)
+
+### Course 4.2 - Intro to TensorFlow
+
+TF nodes are math operations, edges are data tensors.
+
+TF toolkit hierarcy:
+1. `tf.estimator' is a high-level API
+2. `tf.layers`, `tf.metrics`, etc are the components for custom NN building
+3. Core TensorFlow at higher level in Python
+4. Core TensorFlow at low level in C++
+5. Works on different hardware
+
+CloudML provides a managed cloud scalable solution.
+
+Python Core TF API provides a numpy-like functionality to directly build DAGs. TF has lazy evaluation, you need to run DAG in a context of the session. There is an eager mode in TF, but it is not used in production environment.
+
+DAGs can be compiled, executed, submitted to multiple devices, etc. Separating DAGs from execution has many benefits in cloud environment.
+
+**Lab - Getting started with TF**
+
+[Lab code](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/machine_learning/tensorflow/a_tfstart.ipynb)
+</Lab>
+
+Steps to define Estimator API:
+1. Setup feature column
+2. Create a model passing in the feature column
+3. Write Input_Fn, which will work in dataset to return features and corresponding label(s)
+4. Train the model
+5. Use model for predictions
+
+**Lab - ML using Estimator API**
+
+Tasks:
+- Read from Pandas Dataframe into tf.constant
+- Create feature columns for estimator
+- Linear Regression with tf.Estimator framework
+- Deep Neural Network regression
+- Benchmark dataset
+
+Start Datalab `datalab create dataengvm --zone us-central1-a`
+
+[Lab source](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/machine_learning/tensorflow/b_estimator.ipynb)
+</Lab>
+
+To make ML scalable with Big Data we need to refactor the following:
+1. To deal with Big Data we need to deal with data out of memory
+2. To simplify feature engineering we need to be able to add features easily
+3. Model evaluation should be the part of the model training
+
+**Lab - Refactoring to add batching and feature creation**
+
+Lab Scope:
+- Refactor the input
+- Refactor the way the features are created
+- Create and train the model
+- Evaluate model
+
+[Lab source](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/machine_learning/tensorflow/c_batched.ipynb)
+</Lab>
+
+The final piece is to make the model training step more reliable. Steps:
+1. Use a fault-tolerant distributed training framework
+2. Choose model based on validation set
+3. Monitor training as it continues (may take days)
+
+For evaluation use `tf.estimator.train_and_evaluate()`.
+For monitoring use `tf.logging.set_verbosity(tf.logging.INFO)` and Tensorboard.
+
+**Lab - Distributed training and monitoring**
+
+Scope:
+- Create features out of input data
+- Train and evaluate
+- Monitor with Tensorboard
+
+[Lab source](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/machine_learning/tensorflow/d_traineval.ipynb)
+</Lab>
+
+### Course 4.3 - CloudML Engine
+
+CloudML engine provides a full vertical abstraction layer to cover all previously discussed aspects of TF.
+
+OK model on LARGE data is better than GOOD model on SMALL data, so you should try to scale out by using more compure resources on all available data.
+
+Development workflow should start with notebooks (Datalab) on sampled data and then scale out to Data pipelines and move onto ML.
+
+CloudML steps:
+1. Use TF to create computation graph and training application
+2. Package your trainer application
+3. Configure and start a CloudML job
+
+#### Packaging TF trainer
+
+_When sending training to Cloud ML Engine, it's common to split most of the logic into a task.py file and a model.py file. Task.py is the entry point to your code that Cloud ML Engine will start and ignores job-level details like how to parse a command line argument, how long to run, where to write the outputs, how to interface hyperparameter tuning, and so on. To do the core machine learning, task.py will invoke model.py._
+
+Model.py focuses on key features, like fetching data, feature engineering, training and validation and doing predictions.
+
+Once you have all python code ready as a package test it locally with corresponding arguments, then test it on `gcloud` and finally launch CloudML when ready.
+
+CloudML supports both batch and online predictions. You also will need _serving input function_, which will take care of parsing json input to microservice and doing a prediction.
+
+**Lab - Scaling up ML using CloudML**
+
+Scope:
+- Package up the code
+- Find absolute paths to data
+- Run the Python module from the command line
+- Run locally using gcloud
+- Submit training job using gcloud
+- Deploy model
+- Prediction
+- Train on a 1-million row dataset
+
+Done in Datalab as the previous labs in this course.
+
+[Source for the lab](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/machine_learning/cloudmle/cloudmle.ipynb)
+
+Example of launching package using CloudML.
+```
+%%bash
+OUTDIR=gs://${BUCKET}/taxifare/smallinput/taxi_trained
+JOBNAME=lab3a_$(date -u +%y%m%d_%H%M%S)
+echo $OUTDIR $REGION $JOBNAME
+gsutil -m rm -rf $OUTDIR
+gcloud ai-platform jobs submit training $JOBNAME \
+   --region=$REGION \
+   --module-name=trainer.task \
+   --package-path=${PWD}/taxifare/trainer \
+   --job-dir=$OUTDIR \
+   --staging-bucket=gs://$BUCKET \
+   --scale-tier=BASIC \
+   --runtime-version=$TFVERSION \
+   -- \
+   --train_data_paths="gs://${BUCKET}/taxifare/smallinput/taxi-train*" \
+   --eval_data_paths="gs://${BUCKET}/taxifare/smallinput/taxi-valid*"  \
+   --output_dir=$OUTDIR \
+   --train_steps=10000
+```
+</Lab>
+
+#### Links
+1. [Kubeflow pipelines]({{ site.url }}/assets/GCP_kubeflow_pipelines.pdf)
+
+### Course 4.4 - Feature Engineering
+
+**Lab - Feature Engineering**
+- Working with feature columns
+- Adding feature crosses in TensorFlow
+- Reading data from BigQuery
+- Creating datasets using Dataflow
+- Using a wide-and-deep model
+
+_Features crossing_ - combining features allows to add heuristics without increasing the model complexity.
+In tensorflow can be done with `tf.feature_column.crossed_column()`.
+
+Floats are best to be bucketized - `tf.feature_column.bucketized_column()`. Number of buckets is a hyper-parameter.
+
+Combination of wide and deep models:
+- continuous/dense features pass through the DNN to extract maximum value
+- wide/sparse features passed through wide/linear/shallow models to capture "width"
+can be done with `tf.estimator.DNNLinearCombinedClassifier()`.
+
+Three places to do feature engineering:
+1. Pre-processing
+2. Feature creation
+3. During training
+Wherever you choose to do it, the function should be available both during training and serving/predicting.
+
+Another option is to do it during ETL in Dataflow.
+
+**Lab - Feature Engineering**
+
+[Source](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/machine_learning/feateng/feateng.ipynb)
+
+</Lab>
+
+#### Links
+1. [Cloud ML and APIs]({{ site.url }}/assets/GCP_CloudML.pdf)
+1. [BigQuery ML]({{ site.url }}/assets/GCP_BigqueryML.pdf)
