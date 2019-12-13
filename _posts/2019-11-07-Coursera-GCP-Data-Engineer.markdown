@@ -1282,3 +1282,73 @@ Another option is to do it during ETL in Dataflow.
 #### Links
 1. [Cloud ML and APIs]({{ site.url }}/assets/GCP_CloudML.pdf)
 1. [BigQuery ML]({{ site.url }}/assets/GCP_BigqueryML.pdf)
+
+## Course 5 - Building streaming systems on GCP
+
+### Course 5.1 - Streaming scenarios
+
+Streaming => data processing on unbounded data. Unbounded = incomplete.
+
+Three Vs:
+- Volume - MapReduce to handle
+- Velocity - Streaming to handle (this course)
+- Variety - Unstructured ML to handle
+
+Stream processing needs to be able to:
+- Scale to variable volumes
+- Act on real-time data
+- Derive insights from data in flight
+
+**Challenge #1: Variable volume**
+Ingestion has to be able to scale and fault-tolerant. You should decouple sender and receiver. Loosely-coupled systems scale better, have a message bus between sender and receiver.
+
+Solution: pub-sub
+
+**Challenge #2: Act on real-time data**
+We have to assume that latency will happen. Beam/Dataflow provides "exactly ones" processing of events.
+
+What results are calculated? -> transformations
+Where in event time they are calculated? -> event-time windowing
+When the result are materialized? -> watermarks, triggers, allowed lateness
+How do refinements of results relate? -> accumulation modes
+
+Solution: Dataflow
+
+**Challenge #3: real-time insights**
+Need instant insights -> BigQuery. BigQuery streaming abilities.
+
+Typical pipeline is:
+Events, metrics, so on arrive to Pub/Sub, from there go to streaming pipeline on Dataflow, which then publishes results either in BQ (seconds, SQL) or BT (miliseconds, noSQL).
+
+### Course 5.2 - Ingesting variable volumes
+
+Single, highly available, asynchronous messaging bus.
+Multiple publishers publish to a Topic, subscribers create Subscriptions to connect to a Topic.
+
+Caveats:
+- At least once delivery guarantee, can be delivered more than once
+- Delivery is not guaranteed to happen in the original order
+
+Dataflow can address the above concerns. Dataflow can become stateful.
+Pub/sub is not a data storage, Firebase is best for chat apps.
+
+Pull vs push delivery flows. Pull is great for a large number of dynamically created subscriptions, push is great for close to real-time performance.
+
+**Lab - Publish streaming data to pub/sub**
+
+Goals:
+- Create a Pub/Sub topic and subscription
+- Simulate your traffic sensor data into Pub/Sub
+
+```
+gcloud pubsub topics create sandiego
+gcloud pubsub topics publish sandiego --message "hello"
+gcloud pubsub subscriptions create --topic sandiego mySub1
+gcloud pubsub subscriptions pull --auto-ack mySub1
+
+gcloud pubsub topics publish sandiego --message "hello again"
+gcloud pubsub subscriptions pull --auto-ack mySub1
+```
+
+[Python script to simulate data](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/streaming/publish/send_sensor_data.py)
+</Lab>
