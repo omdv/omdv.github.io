@@ -1352,3 +1352,57 @@ gcloud pubsub subscriptions pull --auto-ack mySub1
 
 [Python script to simulate data](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/streaming/publish/send_sensor_data.py)
 </Lab>
+
+### Course 5.3 - Dataflow streaming
+
+Building pipeline to do streaming computations.
+
+Streaming computations:
+- element-wise is simple
+- aggregate and composite is complex
+
+Apache beam supports windowing (time-based shuffling).
+
+When reading from pub/sub timestamp will be taked from the moment of publishing (for streaming events). For batch events the timestamp can be assigned explicitly.
+
+Challenges of stream processing:
+- Variable size: MapReduce with scalable cluster size
+- Variable latency: Windowing/aggregation based on time of event, several types of windowing
+
+`Options.setStreaming(true)` to enable streaming in Dataflow.
+
+Pub/Sub with Dataflow is a great combination:
+- Can account for late arrivals
+- Exactly-once processing - specify the unique label when publishing to Pub/Sub, tell Dataflow that it is the UID.
+- Computing average by bounding the time-window and doing average within that time
+- The calculation will be re-triggered when late data arrives and the result will be updated
+
+**Details of handling late data**
+Promising time is always > event time. In _ideal_ world the event time is equal to processing time. In real world it is not. The _watermark_ tracks how late the system is from event time. Based on the value of watermark there are questions like:
+- when exactly to process events, so that you don't do too early
+- when exactly to emit the result
+
+Watermark is computed by Dataflow as it gets data or it can also be set by Pub/Sub if you know when you can guarantee that the data published to Pub/Sub is complete.
+
+Collectively Windows + Watermark + Triggers help to manage streaming and late data:
+- What you are computing -> Transforms
+- Where in event time you are processing -> Windows
+- When in processing time -> Watermarks + Triggers
+
+**Lab - Processing the Data**
+
+Streaming Data Processing - Lab 2 : Streaming Data Pipelines v1.3
+
+Objectives:
+- Launch Dataflow and run a Dataflow job
+- Understand how data elements flow through the transformations of a Dataflow pipeline
+- Connect Dataflow to Pub/Sub and BigQuery
+- Observe and understand how Dataflow autoscaling adjusts compute resources to process input data optimally
+- Learn where to find logging information created by Dataflow
+- Explore metrics and create alerts and dashboards with Stackdriver Monitoring
+
+Source code:
+- [average conditions](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/streaming/process/sandiego/src/main/java/com/google/cloud/training/dataanalyst/sandiego/AverageSpeeds.java)
+- [current conditions](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/streaming/process/sandiego/src/main/java/com/google/cloud/training/dataanalyst/sandiego/CurrentConditions.java)
+
+</Lab>
