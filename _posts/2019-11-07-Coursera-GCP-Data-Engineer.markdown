@@ -1406,3 +1406,26 @@ Source code:
 - [current conditions](https://github.com/GoogleCloudPlatform/training-data-analyst/blob/master/courses/streaming/process/sandiego/src/main/java/com/google/cloud/training/dataanalyst/sandiego/CurrentConditions.java)
 
 </Lab>
+
+### Course 5.4 - Streaming analytics and dashboards
+
+Doing dashboards and analytics on real-time streaming data.
+
+GCP solution: combination of Dataflow and BigQuery:
+- Dataflow creates tables as it processes to simplify analysis
+- BQ provides storage and analytics
+- In BQ you can create views to provide the common SQL queries
+
+BigQuery:
+- Can handle up to 100,000 rows/table per second
+- Deduplication (on "best effort" basis, best to provide insertId)
+- Streaming data can be queried
+- Attach DataStudio to BigQuery
+
+**Lab - Lab 3 : Streaming Analytics and Dashboards v1.3**
+
+Goals:
+- Connect to a BigQuery data source
+- Create reports and charts to visualize BigQuery data
+
+</Lab>
