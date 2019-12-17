@@ -1429,3 +1429,66 @@ Goals:
 - Create reports and charts to visualize BigQuery data
 
 </Lab>
+
+### Course 5.5 - Handling throughput and latency requirements
+
+Sometimes BQ will not be sufficient in terms of latency (seconds) or throughput (100,000 rows).
+
+Storage options:
+![GCP storage options]({{ site.url }}/assets/GCP-storage-options.png)
+
+CloudSpanner is the proprietary globally-consistent scaled SQL database. Use cases - when you need globally consistent or more than one CloudSQL instance.
+
+BigTable - big, fast, autoscaling noSQL, 100k QPS with 6ms latency for 10-cluster node. BT separates compute (running on nodes in clusters) and storage (in a form of _tablets_ on Google Collosus on GCS). As such you can scale BT cluster on-the-fly after creation since data is separate.
+
+Mutations to operate on BigTable.
+You can query BT from BQ.
+
+#### Designing for BigTable
+
+Only one index (row key).
+Column families grouping a set of columns belonging together or having similar type/cadence (things which never change or change often).
+
+Two types of designs:
+- wide table, where each column exists for every row
+- narrow tables for sparse data
+
+In BT rows are sorted lexicographically in ascending order of the row key.
+
+Recommendations:
+1. Queries that use the row key, a row prefix or a row range are the most efficient. Consider what is the most common query you need to support? This will help to define the row key. Store related entities in adjacent rows, so they are stored in similar tablets.
+2. Add the reverse timestamp to the key, so you can get the "latest value" quickly
+3. Distribute writes and reads across rows, so that workload across nodes is balanced. Bad examples: web domains (some will be more active), sequential like user IDs (new users are more active), static repeatedly updated identifiers (some will be more active).
+
+**Lab - Streaming into BigTable**
+In this lab, you will perform the following tasks:
+1. Launch Dataflow pipeline to read from Pub/Sub and write into Bigtable
+2. Open an HBase shell to query the Bigtable database
+
+[Lab source](https://github.com/GoogleCloudPlatform/training-data-analyst/tree/master/courses/streaming/process/sandiego)
+
+Create BT:
+```
+gcloud beta bigtable instances create sandiego --cluster=cpb210 --cluster-zone=us-central1-b --display-name=="San Diego Freeway data" --instance-type=DEVELOPMENT
+```
+
+Comminicating with BT with [HBase](https://cloud.google.com/bigtable/docs/hbase-bigtable)
+</Lab>
+
+#### Performance Considerations for BT
+
+BT looks at the access patterns and reconsiders/optimizes itself, so it will take care of some level of hotspotting.
+Self-rebalance strategies:
+- distribute reads
+- distribute storage
+
+Tips for improving performance:
+- design schema
+- don't change schema too often to let BT optimize itself (couple of hours)
+- test it on at least 300Gb of data
+- SSD are faster than HDD (6ms vs 50ms at the time of training)
+- use from the same zone
+- control throughput with the number of nodes
+
+#### Links
+1. [BigTable streaming]({{ site.url }}/assets/GCP_BigTable_streaming.pdf)
