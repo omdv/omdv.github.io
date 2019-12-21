@@ -1585,11 +1585,59 @@ Need to know the basic information about each product that might be covered on t
 - What are the key features of this product or technology?
 - Is there an Open Source alternative? If so, what are the key benefits of the cloud-based service over the Open Source software?
 
-### Preparing for data
 
 **Touchstone concepts**
 
 Touchstone: "Unlike other vendor clouds, a subnet spans zones, enabling VMs with adjacent IPs to exist in separate zones, making design for availability easier to accomplish since the VMs can share tagged firewall rules."
+
+First part of exam covers design and building of data processing pipelines:
+1. Data representation
+2. Pipelines
+3. Infrastructure
+
+### Preparing for data
+
+GCP ecosystem overview
+
+**Storage and databases**:
+![Storage]({{ site.url }}/assets/GCP_exam-storage-databases.png)
+- Cloud SQL and BigTable are managed services (i.e. you can see individual clusters or servers), so some IT
+- Cloud Storage, Datastore, Firestore and Spanner are serverless
+It is assumed that processing/compute is done outside of storage and databases.
+
+**Processing/computing**:
+![Compute]({{ site.url }}/assets/GCP_exam-processing.png)
+- Compute Engine
+- App Engine
+- K8s Engine
+- Cloud Functions
+Each of these assumes that you provide your own business logic. All are managed, so there is an IT overhead.
+
+**Data Processing services**:
+![Data processing]({{ site.url }}/assets/GCP_exam-data-processing.png)
+- Dataproc (managed)
+- Dataflow (serverless)
+- BigQuery (serverless)
+Each of these overlap with each other. Data processing services combine storage and compute and automate the storage and compute aspects of data processing through abstractions. For example, in Cloud Dataproc, the data abstraction with Spark is a Resilient Distributed Dataset or RDD. The processing abstraction is a Directed Acyclic Graph, DAG. In BigQuery, the abstractions are table and query and in Dataflow, the abstractions are PCollection and pipeline.
+
+**Artificial Intelligence**:
+![AI]({{ site.url }}/assets/GCP_exam-AI.png)
+Build your own: Cloud ML, Cloud TPU, Cloud AutoML
+Pre-built: Vision API, Speech-to-Text API, Video Intelligence API, NL API, Translation API
+
+**Preparing and Post-processing services**:
+![Pre- and post-processing]({{ site.url }}/assets/GCP_exam-preprocessing.png)
+- Data Transfer Appliance
+- Cloud Dataprep (by Trifecta)
+- Cloud Datalab (Jupyter)
+- Cloud DataStudio
+- Dialogflow
+
+**Infrastructure services**:
+![Infrastructure]({{ site.url }}/assets/GCP_exam-infrastructure-services.png)
+Lots of services.
+No need to memorize exact IOPS and prices. However it is important to know the key differences, i.e. one service having higher throughput than other.
+
 
 #### Links
 1. [DE Exam Guide](https://cloud.google.com/certification/guides/data-engineer/)
