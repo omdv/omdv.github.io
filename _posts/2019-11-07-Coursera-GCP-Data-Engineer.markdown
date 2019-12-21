@@ -1492,3 +1492,107 @@ Tips for improving performance:
 
 #### Links
 1. [BigTable streaming]({{ site.url }}/assets/GCP_BigTable_streaming.pdf)
+
+## Course 6 - Preparing for GCP Data Engineer Exam
+
+Exam is testing practical skills rather than theoretical.
+Other similar certs are Cloud Engineer and Cloud Architect.
+Professional = Associate + design phase, business requirements and planning.
+
+Top-down approach: key points, identify gaps, reach proficiency.
+
+
+#### Case Study 1 - Flowlogistic
+
+Start with Business Requirements. Look for generic terms to start shaping out the solution.
+Some immediate leads:
+- IoT Core for sensors
+- BigQuery for analytics with DataStudio for monitoring
+- Dataproc for existing Hadoop workflows
+
+
+Move to Technical Requirements. When analyzing the existing environments focus on seven categories:
+1. Location/Distribution: in this case it is in a single data center
+2. Storage: various storage appliances like NAS
+3. Databases: SQL, noSQL and Kafka in this case
+4. Data processing: Hadoop/Spark in this case
+5. Application servers: 60 VMs across 20 physical servers
+6. Infrastructure: Jenkins, monitoring, security, billing
+7. ML and predictive analytics: no existing environment
+
+**Coursera solution**
+
+1. Networking and connectivity
+VPC covering multiple regions. Cloud VPN for connection.
+
+2. Applications
+Lift and shift to Compute Engine. Persistent disks? Persistent disks have lower IOPS than local disks.
+
+3. Switch to GCP alternatives
+Kafka -> Pub/Sub
+Data collection -> IoT Core
+SQL -> Cloud SQL or Cloud Spanner
+Cassandra (wide-column noSQL) -> DataStore or BigTable
+
+4. Hosted applications
+Depending on whether container-based can take to App Engine, K8S Engine or Compute Engine.
+
+5. Static content
+Cloud storage with Content Delivery Network (CDN)
+
+6. Misc items
+Batch server workloads
+Preemptible VMs with persistent disks (persistent have less IOPS)
+App Engine with Cron for repeated workloads
+Cloud Composer (Apache Airflow) for handling multiple processing pipelines
+Consider moving from Dataproc to Dataflow in Phase 2
+Cloud Storage for images, Stackdriver Logging for Logs
+Backups: snapshots of persistent disks
+Datalake: cloud storage in place of HDFS, BigQuery eventually
+
+#### Case Study 2 - MJTelco
+
+Search for keywords in business requirements:
+- minimal cost
+- security
+- reliability
+- isolated environments
+
+Technical evaluation of existing environment:
+1. Location/distribution: no environment
+7. Proof of concept in the lab
+Nothing else is known, so let's focus on the provided info and make reasonable assumptions on others.
+
+Technical watchpoints:
+- network and log capabilities of their hardware, volume?
+- any ETL needed
+- type of data? structured, no-structured?
+
+**Coursera solution**
+
+Data ingest: Core IoT or secure file upload
+If applications: App Engine or K8S Engine, more scalable solution
+Datalake: BQ is structured and CloudStorage (multi-regional bucket) is unstructured
+Hadoop/Spark: multiple Dataproc clusters with access to same data for multiple environments
+Stackdriver for monitoring
+
+#### Exam Tips
+
+Need to know the basic information about each product that might be covered on the exam:
+- What it does, why it exists.
+- What is special about its design, for what purpose or purposes was it optimized?
+- When do you use it, and what are the limits or bounds when it is time to consider an alternative?
+- What are the key features of this product or technology?
+- Is there an Open Source alternative? If so, what are the key benefits of the cloud-based service over the Open Source software?
+
+### Preparing for data
+
+**Touchstone concepts**
+
+Touchstone: "Unlike other vendor clouds, a subnet spans zones, enabling VMs with adjacent IPs to exist in separate zones, making design for availability easier to accomplish since the VMs can share tagged firewall rules."
+
+#### Links
+1. [DE Exam Guide](https://cloud.google.com/certification/guides/data-engineer/)
+2. [Case study template]({{ site.url }}/assets/GCP_DE_exam_case_study_template.pdf)
+3. [Flowlogistics Case Study]({{ site.url }}/assets/GCP-Flowlogistics-Case-Study-v2.pdf)
+4. [MJTelco Case Study]({{ site.url }}/assets/GCP_MJTelco-Case-Study-v2.pdf)
