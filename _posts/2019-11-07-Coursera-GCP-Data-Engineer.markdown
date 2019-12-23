@@ -1595,9 +1595,7 @@ First part of exam covers design and building of data processing pipelines:
 2. Pipelines
 3. Infrastructure
 
-### Preparing for data
-
-GCP ecosystem overview
+#### GCP ecosystem overview
 
 **Storage and databases**:
 ![Storage]({{ site.url }}/assets/GCP_exam-storage-databases.png)
@@ -1638,9 +1636,105 @@ Pre-built: Vision API, Speech-to-Text API, Video Intelligence API, NL API, Trans
 Lots of services.
 No need to memorize exact IOPS and prices. However it is important to know the key differences, i.e. one service having higher throughput than other.
 
+#### Flexible data representations
+
+**Exam Tip**
+Know how data is stored in each system and what it is optimized for.
+
+How you store data defines the best way to process it and vice-versa.
+- Cloud storage: data is object, stored in buckets (alternarive to OSS HDFS)
+- Datastore: data is property, contained in entity and is a kind category
+- CloudSQL: values in rows and columns in table in database
+- Cloud Spanner: same as above
+
+**AVRO**
+Avro is a remote procedure call and data serialization framework developed within Apache's Hadoop project. It uses JSON for defining data types and protocols and serializes data in a compact binary format.
+
+**BigQuery**
+Data in tables in datasets (access control), which are inside project (same billing, etc). BQ is columnar, which is cheaper than row processing. Queries use only few columns usually. Also every column is same type, so BQ can compress it very effectively.
+
+**Spark**
+Data is stored as an entity, but behind the scenes it is in Resilient Distributed Dataset (RDD), which is managed by Spark itself.
+
+**Dataflow**
+Data is represented as PCollection. Each step is a Transform. Many Transforms form a Pipeline. Pipeline is executed by the Runner (local or cloud for production). Each Transform uses a PCollection and returns a PCollection, so PCollection is the unit of data. Unlike Dataproc Dataflow is serverless.
+
+PCollection is immutable and this is the source of the speed in Dataflow processing. Dataflow uses same code and pipelines for Batch and Streaming data. Averaging for streaming is done by selecting Window length, for instance.
+
+**Tensorflow**
+Data in TF is represented as Tensors. Tensor 0 is single value, Tensor 1 is vector and so on.
+
+
+#### Data pipelines
+
+**Dataproc consideration**
+
+![Dataproc]({{ site.url }}/assets/GCP_exam-Dataproc-pipelines.png)
+
+It is recommended to use stateless Dataproc cluster by storing data externally (BT/HBase, Cloud Storage/HDFS), so you can shut it down when not in use.
+
+**Exam tip**
+Spark does some of it processing in-memory, so for certain tasks it is extremely fast.
+
+Dataproc Spark RDD use lazy evaluation. It builds DAGs, but waits till the requests are made to allocate resources. Dataproc can augment BQ by reading from it, processing and loading back. Dataproc has multiple connections to read/write from many GCP services.
+
+Use initialization actions during cluster startup to prepare clusters.
+
+**Exam tip**
+If data is in BQ and business logic is better expressed as a code, rather than SQL it may be better to run Spark on top of BQ.
+
+**Dataflow considerations**
+
+You can get data from many sources and write to many sinks, but pipeline code remains the same (Java, python) and also is valid both for streaming and batch. Dataflow transforms can be done in parallel.
+
+Some of the most common Dataflow operations: ParDo, Map, FlatMap, apply(ParDo), GroupBy, GroupByKey, Combine. Know what are the most expensive (GroupByKey).
+
+Template workflows to separate developers from users.
+
+**Exam tip**
+User roles to limit access to only Dataflow resources, not just the project.
+
+
+#### Infrastructure
+
+BQ has two parts: frontend for analysis, backend for storage.
+
+**Exam tip**
+Know the BQ access control granularity - projects/datasets.
+
+Separation of compute and storage allows for serverless operations, i.e. BQ can run analytics on multiple data sources. This is completely opposite to Hadoop/HDFS and became possible because of petabyte network speeds within GCP.
+
+Cloud Dataproc follows the same logic of splitting compute and storage, so now it is possible to shut down cluster when not in use. Know the analogy of BT=HBase, GCS=HDFS.
+
+Cloud Dataflow is an ETL solution for BQ.
+
+Various Data Ingestion patterns:
+![Data ingest]()({{ site.url }}/assets/GCP_exam-data-ingest.png)
+![BQ ingest]()({{ site.url }}/assets/GCP_exam-BQ-ingest.png)
+
+**Exam tip**
+Use gsutil when transfering from on-premise, use Storage Transfer Service when moving from another cloud provider.
+
+**Exam tip**
+Cloud Pub/Sub will hold messages up to 7 days.
+
+Typical patterns:
+- Cloud Pub/Sub for ingestion
+- Cloud Dataflow for processing
+- BQ for analysis
+
+![Pipeline example]()({{ site.url }}/assets/GCP_exam-infra-example.png)
+
+Some other tips for this section:
+
+![Tips 01]()({{ site.url }}/assets/GCP_exam-tips-01.png)
+![Tips 02]()({{ site.url }}/assets/GCP_exam-tips-02.png)
+![Tips 03]()({{ site.url }}/assets/GCP_exam-tips-03.png)
+
 
 #### Links
 1. [DE Exam Guide](https://cloud.google.com/certification/guides/data-engineer/)
 2. [Case study template]({{ site.url }}/assets/GCP_DE_exam_case_study_template.pdf)
 3. [Flowlogistics Case Study]({{ site.url }}/assets/GCP-Flowlogistics-Case-Study-v2.pdf)
 4. [MJTelco Case Study]({{ site.url }}/assets/GCP_MJTelco-Case-Study-v2.pdf)
+5. [Designing Data Processing System]({{ site.url }}/assets/GCP-Designing-Data-Processing-Systems.pdf)
