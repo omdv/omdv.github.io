@@ -1731,6 +1731,199 @@ Some other tips for this section:
 ![Tips 02]()({{ site.url }}/assets/GCP_exam-tips-02.png)
 ![Tips 03]()({{ site.url }}/assets/GCP_exam-tips-03.png)
 
+#### Building and Maintaining Solutions
+
+CAP Theorem, ACID vs BASE:
+- CAP is Consistency, Availability, and Partition tolerance. You can pick 2 of those but you can't do all 3.
+- ACID focuses on Consistency and availability.
+- BASE focuses on Partition tolerance and availability and throws consistency out the window.
+
+Cloud Storage: be familiar with all access control methods, like IAM, signed URL, etc. Know about storage classes, lifecycle management.
+
+Cloud SQL vs Cloud Spanner. Spanner is globally consistent and can support much bigger size. Distributing mySQL is hard, so Spanner is the solution.
+
+Cloud Datastore was previously available only for AppEngine, but now can be used outside.
+
+![Storage 01]()({{ site.url }}/assets/GCP_exam-storage-options.png)
+![Storage 02]()({{ site.url }}/assets/GCP_exam-choosing-storage.png)
+
+Dataflow: know triggers, watermark, different windowing types, side inputs, etc.
+
+![Storage 03]()({{ site.url }}/assets/GCP_exam-data-processing-solutions.png)
+
+**Exam tip**
+To move data from one location in BQ to another - use the GCS bucket and change the region of the bucket before creating a new dataset.
+
+**Exam tip**
+When considering pipelines look at business requirements for consumption frequency, look for in/out sides. How frequently and how significantly the demand for resources will change (i.e. serverless vs server).
+
+
+### Analysis and Modeling
+
+Cloud Datalab to explore and develop.
+
+Cloud ML engine:
+1. Train data
+2. Create trainer and make it available to Cloud ML
+3. Conf and start a CloudML job
+
+Tensorflow: be familar with levels and some key functions. Lazy mode vs eager mode.
+
+**Exam tip**
+Know supervised vs unsupervised, regression vs classification, loss functions (RMSE vs MSE), etc. Goal is "practical, not perfect".
+
+**Exam tip**
+Confusion matrix to measure the performance of classification models.
+Be able to distinguish toy ML solutions from production solutions.
+
+Normalization - the trade off between relationalism and flat structure. Flat structure in general provides better scalability, i.e. the example of adding a new column to the schema. Normalized is more efficient (storage-wise), denormalized (more repeated fields) is more performant.
+
+BQ can use nested schemas.
+
+Grouping a highly-cardinal data is a bad idea.
+
+#### BigTable performance
+
+![Bigtable]({{ site.url }}/assets/GCP_exam-Bigtable-structure.png)
+
+Row key design (refer to the related course): use reverse timestamp with some additional category, so that queries are distributed.
+
+Performance increase (QPS) is linear with the number of nodes. Adding new nodes may take few hours to propagate to have an impact on performance.
+
+#### BigQuery pricing
+
+Loading is free. Avoid "select ALL", as it will drive the cost significantly. Use the costing calculator.
+
+
+#### Reliability and Non-Functionals
+
+Scaling may improve the reliability.
+Quality control - monitor in Stackdriver or DataStudio.
+
+**Exam tip**
+Some quality control features can be built into the technical solutions, e.g. using TFBoard to monitor the quality of training on validation set.
+
+Review DS terminology - filters, dimensions, views, metrics, etc.
+
+#### Security
+
+Be aware of the granularity of control for each service.
+
+Various encryption methods:
+- default (managed encryption)
+- customer-managed encryption keys (cmek)
+- customer-supplied EKs (csek)
+- client-side encryption
+
+Know key concepts: Cloud Armor, Cloud Load Balancing, Cloud firewall rules, service accounts, separation into front-end and back-end, isolation of resources using separate service accounts between services.
+
+**Exam tip**
+Determine the service at question, determine the level of security requirements.
+
+**Exam tip**
+BQ authorization is at dataset level. To give access only to queries and not the underlying dataset - export results of the query to a diff dataset and give access to it instead.
+
+![Security-01]({{ site.url }}/assets/GCP_designing_security-01.png)
+![Security-02]({{ site.url }}/assets/GCP_designing_security-02.png)
+
+#### Challenge Lab - 1
+
+Create a query that produces the average trip time for trips originating from the airport in Frankfurt, Germany (FRA) and destined for the airport in Kuala Lumpur, Malaysia (KUL), and group the results by airline. The resulting average times should be similar.
+
+```
+SELECT
+  airline, AVG(minutes)
+FROM 
+  `qwiklabs-gcp-02-e9b65681da2f.JasmineJasper.triplog`
+WHERE
+  origin='FRA' AND destination='KUL'
+GROUP BY
+  airline
+```
+
+Create a query that produces the average trip time for trips originating from London Heathrow Airport, United Kingdom (LHR) and destined for the airport in Kuala Lumpur, Malaysia (KUL), and group the results by airline, and order them from lowest to highest. The resulting average times should reveal whether the airline, PlanePeople Air, kept its promise to use faster airplanes from Heathrow Airport.
+
+```
+SELECT
+  airline, AVG(minutes)
+FROM
+  `qwiklabs-gcp-02-e9b65681da2f.JasmineJasper.triplog`
+WHERE 
+  origin='LHR' AND destination='KUL'
+GROUP BY
+  airline
+ORDER BY
+  AVG(minutes) ASC
+```
+
+#### Challenge Lab - 2
+
+Create a cluster with access to a Cloud Storage staging bucket.
+Run PySpark jobs with input arguments.
+Troubleshoot and resolve a cluster capacity job error.
+Upgrade the master node configuration on an existing cluster.
+Resolve a cluster capacity performance issue.
+Upgrade the number of worker nodes on an existing cluster.
+
+
+#### Resources for Further Reading/Preparation
+
+Know high-level description of each of the services below.
+
+1. Storage and Database services:
+1.1 Disks
+1.2 Cloud Storage
+1.3 Cloud Memorystore
+1.4 Cloud SQL
+1.5 Cloud Datastore
+1.6 Cloud Firestore
+1.7 Firebase Realtime Database
+1.8 Bigtable
+1.9 Spanner
+
+2. Data Analytics
+2.1 BQ
+2.2 Dataflow
+2.3 Dataproc
+2.4 Datalab
+2.5 Dataprep
+2.6 Pub/sub
+2.7 Data Studio
+2.8 Composer
+
+3. ML
+3.1 Cloud ML Engine
+3.2 TPU
+3.3 AutoML
+3.4 Natural Language
+3.5 Speech-to-Text
+3.6 Translation
+3.7 Text-to-speech
+3.8 Dialogflow Enterprise
+3.9 Cloud Vision
+3.10 Cloud Video Intelligence
+
+4. Infrastructure
+4.1 StackDriver
+4.2 Transparent Service Level Indicators
+4.3 Cloud Deployment Manager
+4.4 Cloud Console
+
+Also:
+- DE Practice Exam on GCP.
+- Qwiklabs Data Engineer Quest
+
+Review of tips:
+TIP 1: Create your own custom preparation plan using the resources in this course.
+TIP 2: Use the Exam Guide outline to help identify what to study.
+TIP 3: Product and technology knowledge.
+TIP 4: This course has touchstone concepts for self-evaluation, not technical training. Seek training if needed.
+TIP 5: Problem solving is the key skill.
+TIP 6: Practice evaluating your confidence in your answers.
+TIP 7: Practice case evaluation and creating proposed solutions.
+Tip 8: Use what you know and what you don't know to identify correct and incorrect answers.
+Tip 9: Review or rehearse labs to refresh your experience
+Tip 10: Prepare!
 
 #### Links
 1. [DE Exam Guide](https://cloud.google.com/certification/guides/data-engineer/)
@@ -1738,3 +1931,6 @@ Some other tips for this section:
 3. [Flowlogistics Case Study]({{ site.url }}/assets/GCP-Flowlogistics-Case-Study-v2.pdf)
 4. [MJTelco Case Study]({{ site.url }}/assets/GCP_MJTelco-Case-Study-v2.pdf)
 5. [Designing Data Processing System]({{ site.url }}/assets/GCP-Designing-Data-Processing-Systems.pdf)
+6. [Building and Operationalizing Data Processing Systems]({{ site.url }}/assets/GCP_exam-Building-and-Operationalizing-Data-Processing-Systems.pdf)
+7. [Operationalizing ML Models]({{ site.url}}/assets/GCP-Operationalizing-Machine-Learning-Models.pdf)
+8. [Ensuring Solution Quality]({{ site.url}}/assets/GCP_exam-Ensuring-Solution-Quality.pdf)
